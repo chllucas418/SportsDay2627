@@ -5,7 +5,7 @@
 
   // Sign-in password, stored as a plain variable (visible in this file and in the Cloudflare dashboard).
   "vars": {
-    "APP_PASSWORD": "SportsDayLucas"
+    "APP_PASSWORD": "SportsDay2026"
   },
 
   // To serve it on your own domain, add (replace with your hostname):
