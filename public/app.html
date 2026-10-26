@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Sports Day Call Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: a stage-manager's run sheet. Sticky clock and status bar over a ruled list of events grouped by start time. */
+:root{
+  --bg:#f1f2ef; --surface:#fafaf8; --ink:#171b1e; --muted:#5b6469; --rule:#d3d7d2; --bar:#e6e8e4;
+  --accent:#1c2b36; --on-accent:#ffffff; --ok:#2b7549;
+  --l1-bg:#d8e6f6; --l1:#1f5ea8; --l1-ink:#ffffff;
+  --l2-bg:#faeca0; --l2:#e8b800; --l2-ink:#241d00;
+  --l3-bg:#f7d0cb; --l3:#c42b1f; --l3-ink:#ffffff;
+  --scrim:rgba(20,24,26,.45);
+  --sans:"IBM Plex Sans","Noto Sans TC","PingFang HK","PingFang TC","Microsoft JhengHei","Noto Sans CJK TC",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#111415; --surface:#181c1e; --ink:#e9ecea; --muted:#97a0a4; --rule:#2c3336; --bar:#1d2224;
+    --accent:#e1e7ea; --on-accent:#111415; --ok:#5cc08a;
+    --l1-bg:#18304b; --l1:#5b9be0; --l1-ink:#07121f;
+    --l2-bg:#473b08; --l2:#f0c73a; --l2-ink:#1d1700;
+    --l3-bg:#561d19; --l3:#ff6a5c; --l3-ink:#210504;
+    --scrim:rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 var(--sans);padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bar);z-index:10}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:3px solid var(--l1);outline-offset:2px}
+.in{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+.top .in{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-block:14px 12px}
+.top h1{margin:0;font-size:19px;font-weight:600;line-height:1.2}
+.top .sub{margin:2px 0 0;font-size:12px;color:var(--muted);letter-spacing:.04em}
+.ghost{background:transparent;border:1px solid var(--rule);border-radius:2px;padding:8px 12px;font-weight:500}
+.ghost:hover{border-color:var(--muted)}
+.ghost.sm{padding:4px 8px;font-size:13px}
+
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bar);border-block:1px solid var(--rule)}
+.bar .in{display:flex;flex-direction:column;gap:8px;padding-block:8px}
+.row1{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.tabs{display:flex;gap:4px}
+.tab{background:transparent;border:1px solid var(--rule);border-radius:2px;padding:6px 12px;text-align:left;line-height:1.2;font-weight:600}
+.tab small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.tab[aria-selected="true"] small{color:inherit;opacity:.8}
+.clockbox{text-align:right;line-height:1.1}
+.clock{font:600 22px var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.clock small{font:500 10px var(--mono);color:var(--muted);letter-spacing:.04em;margin-left:4px}
+.conn{margin-top:3px;font-size:11px;font-weight:600;color:var(--muted)}
+.conn::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;margin-right:5px}
+.conn.ok{color:var(--ok)}
+.conn.bad{color:var(--l3)}
+.rehearsal{display:inline-block;margin-top:3px;font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;background:var(--l2);color:var(--l2-ink);padding:1px 5px}
+.strip{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 14px;font-size:13px}
+.strip .nx{min-width:0;flex:1 1 240px}
+.strip .nx b{font-weight:600}
+.sright{display:flex;align-items:center;gap:12px}
+.badge{display:inline-block;font:600 12px var(--mono);padding:2px 7px;margin-right:6px;border-radius:2px}
+.badge.l1{background:var(--l1);color:var(--l1-ink)}
+.badge.l2{background:var(--l2);color:var(--l2-ink)}
+.badge.l3{background:var(--l3);color:var(--l3-ink)}
+.badge.ok{background:transparent;border:1px solid var(--ok);color:var(--ok)}
+.chk{display:flex;align-items:center;gap:6px;white-space:nowrap;color:var(--muted)}
+.chk input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
+
+main{padding-top:6px}
+.slot{margin-top:22px}
+.slot-h{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;padding:6px 0;border-top:2px solid var(--ink)}
+.slot-time{font:600 24px var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.delay{font:600 12px var(--mono);background:var(--l2);color:var(--l2-ink);padding:2px 6px}
+.slot-meta{margin-left:auto;font-size:13px;color:var(--muted)}
+.chg{background:transparent;border:0;padding:6px 0 6px 4px;color:var(--l1);font-weight:600;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.slot-sum{flex-basis:100%;font-size:13px;color:var(--muted)}
+.slot.marker .slot-h{border-top:1px dashed var(--muted)}
+.slot.marker .slot-time,.slot.marker .mk{color:var(--muted)}
+.mk{font-size:14px}
+ul.evs{list-style:none;margin:0;padding:0;background:var(--surface);border-bottom:1px solid var(--rule)}
+.ev{display:grid;grid-template-columns:46px minmax(0,1fr) 92px;grid-template-rows:auto auto;gap:3px 12px;padding:10px 10px 10px 8px;border-top:1px solid var(--rule)}
+.no{grid-row:1 / span 2;font-family:var(--mono);line-height:1.2}
+.no b{display:block;font-size:17px;font-weight:600}
+.no span{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-family:var(--sans)}
+.what{min-width:0}
+.zh{font-weight:600;font-size:17px;line-height:1.25}
+.en{font-size:15px;font-weight:500;line-height:1.3}
+.meta{font-size:12px;color:var(--muted)}
+.meta:empty{display:none}
+.state{grid-column:2;display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;min-width:0}
+.pips{display:inline-flex;gap:3px}
+.pips i{width:21px;height:21px;display:grid;place-items:center;font:600 11px var(--mono);font-style:normal;border:1.5px solid var(--muted);color:var(--muted);border-radius:2px}
+.pips i.made{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.pips i.made.late{box-shadow:0 0 0 2px var(--l2)}
+.pips i.due.l1{background:var(--l1);border-color:var(--l1);color:var(--l1-ink)}
+.pips i.due.l2{background:var(--l2);border-color:var(--l2);color:var(--l2-ink)}
+.pips i.due.l3{background:var(--l3);border-color:var(--l3);color:var(--l3-ink)}
+.msg{font-size:13px;min-width:0}
+.undo{background:transparent;border:0;padding:4px 2px;font-size:12px;color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+.act{grid-column:3;grid-row:1 / span 2;display:flex}
+.call{flex:1;min-height:56px;border:0;border-radius:3px;background:var(--accent);color:var(--on-accent);font-weight:600;font-size:15px}
+.call:active{transform:scale(.97)}
+.call:disabled{background:transparent;color:var(--ok);border:1.5px solid var(--ok);cursor:default;transform:none}
+.ev.st1{background:var(--l1-bg)} .ev.st1 .call{background:var(--l1);color:var(--l1-ink)}
+.ev.st2{background:var(--l2-bg)} .ev.st2 .call{background:var(--l2);color:var(--l2-ink)}
+.ev.st3{background:var(--l3-bg)} .ev.st3 .call{background:var(--l3);color:var(--l3-ink)}
+.ev.st1 .msg,.ev.st2 .msg,.ev.st3 .msg{font-weight:600}
+.ev.done .what,.ev.done .no{opacity:.55}
+.ev.done .call:disabled{opacity:.8}
+
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:560px;max-height:90%;overflow:auto;border-top:3px solid var(--ink);padding:16px max(16px,env(safe-area-inset-left,0px)) calc(20px + env(safe-area-inset-bottom,0px))}
+@media (min-width:640px){.scrim{align-items:center}.sheet{border:3px solid var(--ink);max-height:86%}}
+.sheet h2{margin:0 0 4px;font-size:18px}
+.sheet h3{margin:20px 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.sheet .hint{margin:0 0 8px;font-size:13px;color:var(--muted)}
+.sh-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.field{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--rule)}
+.field label{flex:1;min-width:0}
+.field .sw{display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px}
+.num,.txt{width:84px;padding:8px;border:1px solid var(--muted);background:var(--bg);border-radius:2px;font:500 16px var(--mono);text-align:right}
+.txt{width:auto;text-align:left}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.btn{background:var(--accent);color:var(--on-accent);border:0;border-radius:2px;padding:10px 14px;font-weight:600}
+.btn.sec{background:transparent;color:var(--ink);border:1px solid var(--muted)}
+.btn.warn{background:var(--l3);color:var(--l3-ink);border:0}
+.legend{display:grid;gap:6px;font-size:13px}
+.legend div{display:flex;align-items:center;gap:8px}
+.timeinput{font:600 28px var(--mono);padding:6px 8px;border:1px solid var(--muted);background:var(--bg);border-radius:2px}
+.tick{width:22px;height:22px;accent-color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.call{transition:transform .08s}}
+@media (max-width:420px){.tab{padding:6px 9px}.clock{font-size:20px}.zh{font-size:16px}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="in">
+    <div>
+      <h1>Sports Day Call Sheet</h1>
+      <p class="sub">第30屆陸運會 · 30th Athletics Meet 2026–27</p>
+    </div>
+    <button class="ghost" id="open-settings" type="button">Settings</button>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="in">
+    <div class="row1">
+      <div class="tabs" role="tablist" aria-label="Day">
+        <button class="tab" role="tab" id="tab-0" data-day="0" type="button">Day 1<small>Tue 27 Oct</small></button>
+        <button class="tab" role="tab" id="tab-1" data-day="1" type="button">Day 2<small>Wed 28 Oct</small></button>
+      </div>
+      <div class="clockbox">
+        <div class="clock"><span id="clock">--:--:--</span><small>UTC+8</small></div>
+        <div class="conn" id="conn">Connecting…</div>
+        <span class="rehearsal" id="rehearsal" hidden>Rehearsal clock</span>
+      </div>
+    </div>
+    <div class="strip">
+      <div class="nx" id="strip-next"></div>
+      <div class="sright">
+        <button class="ghost sm" id="snd-enable" type="button" hidden>Enable sound</button>
+        <label class="chk"><input type="checkbox" id="hide-done"> Hide finished</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="in" id="list"></main>
+
+<div class="scrim" id="adj-scrim" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="adj-title">
+    <div class="sh-h"><div><h2 id="adj-title">Change start time</h2><p class="hint" id="adj-sub"></p></div><button class="ghost" type="button" data-close="adj-scrim">Close</button></div>
+    <div class="field" style="border-top:0"><label for="adj-time">New start time</label><input class="timeinput" type="time" id="adj-time"></div>
+    <div class="btns" id="adj-quick">
+      <button class="btn sec" type="button" data-d="-5">−5 min</button>
+      <button class="btn sec" type="button" data-d="5">+5 min</button>
+      <button class="btn sec" type="button" data-d="10">+10 min</button>
+      <button class="btn sec" type="button" data-d="15">+15 min</button>
+      <button class="btn sec" type="button" id="adj-printed">Printed time</button>
+    </div>
+    <div class="field" id="adj-later-row" style="margin-top:12px"><label for="adj-later">Move every later slot today by the same amount</label><input class="tick" type="checkbox" id="adj-later" checked></div>
+    <div class="btns"><button class="btn" type="button" id="adj-apply">Apply</button></div>
+  </div>
+</div>
+
+<div class="scrim" id="set-scrim" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="set-title">
+    <div class="sh-h"><h2 id="set-title">Settings</h2><button class="ghost" type="button" data-close="set-scrim">Close</button></div>
+
+    <h3>Call deadlines (all devices)</h3>
+    <p class="hint">A call turns its colour when it has not been made by this many minutes before the start time.</p>
+    <div class="field"><label for="th1"><span class="sw" style="background:var(--l1)"></span>Call 1 (blue)</label><input class="num" type="number" inputmode="numeric" min="0" max="180" id="th1"> <span>min</span></div>
+    <div class="field"><label for="th2"><span class="sw" style="background:var(--l2)"></span>Call 2 (yellow)</label><input class="num" type="number" inputmode="numeric" min="0" max="180" id="th2"> <span>min</span></div>
+    <div class="field"><label for="th3"><span class="sw" style="background:var(--l3)"></span>Final call (red)</label><input class="num" type="number" inputmode="numeric" min="0" max="180" id="th3"> <span>min</span></div>
+
+    <h3>Delay all events (all devices)</h3>
+    <p class="hint">Moves every start time on <b id="delay-day">Day 1</b> by the same amount. Use a negative number to bring events forward. Deadlines and colours follow the new times.</p>
+    <div class="field"><label for="delay-all">Delay by</label><input class="num" type="number" inputmode="numeric" min="-180" max="180" value="10" id="delay-all"> <span>min</span></div>
+    <div class="btns" id="delay-quick">
+      <button class="btn sec" type="button" data-dd="5">5</button>
+      <button class="btn sec" type="button" data-dd="10">10</button>
+      <button class="btn sec" type="button" data-dd="15">15</button>
+      <button class="btn sec" type="button" data-dd="30">30</button>
+      <button class="btn sec" type="button" data-dd="-5">−5</button>
+    </div>
+    <div class="field" style="margin-top:8px"><label for="delay-future">Only events that have not started yet</label><input class="tick" type="checkbox" id="delay-future" checked></div>
+    <div class="btns"><button class="btn" type="button" id="delay-apply">Apply to all</button></div>
+    <p class="hint" id="delay-note" style="margin-top:8px" role="status"></p>
+
+    <h3>Sound (this device)</h3>
+    <p class="hint">A beep plays when a call becomes overdue: one low beep for call 1, two for call 2, three sharp high beeps for the final call.</p>
+    <div class="field"><label for="sound">Beep on overdue</label><input class="tick" type="checkbox" id="sound"></div>
+    <div class="btns">
+      <button class="btn sec" type="button" data-beep="1">Test call 1</button>
+      <button class="btn sec" type="button" data-beep="2">Test call 2</button>
+      <button class="btn sec" type="button" data-beep="3">Test final call</button>
+    </div>
+
+    <h3>Reading a row</h3>
+    <div class="legend">
+      <div><span class="pips"><i>1</i></span> Not made yet, still within time</div>
+      <div><span class="pips"><i class="made">1</i></span> Made on time</div>
+      <div><span class="pips"><i class="made late">1</i></span> Made, but after its deadline</div>
+      <div><span class="pips"><i class="due l1">1</i><i class="due l2">2</i><i class="due l3">3</i></span> Deadline passed, call not made</div>
+    </div>
+
+    <h3>Screen (this device)</h3>
+    <div class="field"><label for="wake">Keep the screen on</label><input class="tick" type="checkbox" id="wake"></div>
+
+    <h3>Rehearsal clock (all devices)</h3>
+    <p class="hint">Pretend it is a different time (Hong Kong time) to practise. Every device follows it. Clear the call counts afterwards.</p>
+    <div class="field"><label for="reh">Pretend it is</label><input class="txt" type="datetime-local" id="reh"></div>
+    <div class="btns"><button class="btn sec" type="button" id="reh-set">Use this time</button><button class="btn sec" type="button" id="reh-off">Back to real time</button></div>
+
+    <h3>Reset (all devices)</h3>
+    <div class="btns">
+      <button class="btn sec" type="button" id="reset-times">Restore printed start times</button>
+      <button class="btn sec" type="button" id="reset-calls">Clear all call counts</button>
+    </div>
+
+    <h3>Account</h3>
+    <div class="btns"><button class="btn sec" type="button" id="sign-out">Sign out of this device</button></div>
+  </div>
+</div>
+
+<script type="module">
+import {applyOp, emptyState} from '/shared.js';
+
+/* The venue's time zone. Every device shows and counts in this zone whatever its own setting is. */
+var TZ=480; // minutes east of UTC (Hong Kong, UTC+8)
+
+/* ---------- Schedule data (transcribed from the printed 賽程表) ---------- */
+var CAT={'男甲':"Boys' Grade A",'男乙':"Boys' Grade B",'男丙':"Boys' Grade C",'女甲':"Girls' Grade A",'女乙':"Girls' Grade B",'女丙':"Girls' Grade C",'男公開':"Boys' Open",'女公開':"Girls' Open"};
+var EVN={'400米':'400m','1500米':'1500m','100米':'100m','100米欄':'100m Hurdles','200米':'200m','800米':'800m','3000米':'3000m','鉛球':'Shot Put','跳高':'High Jump','標槍':'Javelin','跳遠':'Long Jump','鐵餅':'Discus','三級跳遠':'Triple Jump'};
+var RD={'初賽':'Heats','決賽':'Final'};
+function T(n,cat,ev,rd,c){return {key:n,n:n,kind:'track',cat:cat,ev:ev,rd:rd,c:c};}
+function F(n,cat,ev,c){return {key:n,n:n,kind:'field',cat:cat,ev:ev,rd:'決賽',c:c};}
+function R(key,n,zh,en,kind){return {key:key,n:n,kind:kind||'relay',zh:zh,en:en};}
+function S(t,items){return {t:t,items:items};}
+function M(t,zh,en){return {t:t,marker:{zh:zh,en:en}};}
+
+var DAYS=[
+ {id:1,date:[2026,10,27],slots:[
+  M('09:00','開幕典禮','Opening ceremony'),
+  S('09:30',[T(1,'男丙','400米','初賽',13),T(2,'男乙','400米','初賽',14)]),
+  S('10:00',[F(3,'男甲','鉛球',25),F(4,'男丙','跳高',16),F(5,'女甲','標槍',21),F(6,'女乙','跳遠',25)]),
+  S('10:30',[T(7,'男丙','1500米','決賽',13),T(8,'男乙','1500米','決賽',12),T(9,'男甲','1500米','決賽',23),T(10,'女公開','1500米','決賽',39)]),
+  S('11:00',[F(11,'男甲','鐵餅',20),F(12,'男乙','跳遠',27),F(13,'女甲','跳高',6),F(14,'女丙','鉛球',34)]),
+  S('11:45',[T(15,'女丙','100米','初賽',66),T(16,'女乙','100米','初賽',28),T(17,'女甲','100米','初賽',14),T(18,'男丙','100米','初賽',52),T(19,'男乙','100米','初賽',41),T(20,'男甲','100米','初賽',16)]),
+  M('12:45','午膳','Lunch'),
+  S('14:00',[T(21,'男甲','100米欄','決賽',5),T(22,'男乙','100米欄','決賽',3),T(23,'男丙','100米欄','決賽',1),T(24,'女甲','100米欄','決賽',4),T(25,'女乙','100米欄','決賽',2),T(26,'女丙','100米欄','決賽',5),
+             T(27,'女丙','200米','初賽',15),T(28,'男丙','200米','初賽',19),T(29,'男乙','200米','初賽',13),T(30,'男甲','200米','初賽',9),
+             F(31,'男甲','跳遠',8),F(32,'男乙','鐵餅',6),F(33,'男丙','鉛球',22),F(34,'女乙','跳高',20)]),
+  S('14:45',[R(35,35,'班際接力比賽','Inter-class relay'),F(36,'女甲','鉛球',25),F(37,'女乙','標槍',14),F(38,'女丙','跳遠',37)]),
+  S('15:30',[R(39,39,'制服隊伍接力比賽','Uniformed groups relay')]),
+  S('15:45',[R(40,40,'中六畢業跑','Form 6 graduation run')])
+ ]},
+ {id:2,date:[2026,10,28],slots:[
+  S('08:45',[T(41,'女丙','400米','決賽',5),T(42,'女乙','400米','決賽',5),T(43,'女甲','400米','決賽',3),T(44,'男丙','400米','決賽',8),T(45,'男乙','400米','決賽',8),T(46,'男甲','400米','決賽',4),
+             F(47,'男甲','標槍',20),F(48,'男乙','跳高',12),F(49,'女甲','跳遠',8),F(50,'女乙','鉛球',31)]),
+  S('09:45',[T(51,'女丙','100米','決賽',8),T(52,'女乙','100米','決賽',8),T(53,'女甲','100米','決賽',8),T(54,'男丙','100米','決賽',8),T(55,'男乙','100米','決賽',8),T(56,'男甲','100米','決賽',8),
+             F(57,'男甲','三級跳遠',11),F(58,'男乙','三級跳遠',3),F(59,'女乙','鐵餅',11),F(60,'女丙','跳高',10)]),
+  S('10:15',[T(61,'女丙','800米','決賽',4),T(62,'女乙','800米','決賽',5),T(63,'女甲','800米','決賽',3),T(64,'男丙','800米','決賽',4),T(65,'男乙','800米','決賽',11),T(66,'男甲','800米','決賽',14),
+             F(67,'男乙','鉛球',30),F(68,'男丙','跳遠',35),F(69,'女甲','鐵餅',16)]),
+  S('10:30',[T(70,'女丙','200米','決賽',8),T(71,'女乙','200米','決賽',7),T(72,'女甲','200米','決賽',4),T(73,'男丙','200米','決賽',8),T(74,'男乙','200米','決賽',8),T(75,'男甲','200米','決賽',8),
+             F(76,'男甲','跳高',4),F(77,'男乙','標槍',13)]),
+  S('10:45',[T(78,'男公開','3000米','決賽',38)]),
+  S('11:15',[R(79,79,'社際4×400米接力比賽','Inter-house 4×400m relay')]),
+  S('11:30',[R(80,80,'社際4×100米接力比賽','Inter-house 4×100m relay')]),
+  M('12:30','午膳','Lunch'),
+  S('14:00',[R(81,81,'校長盃師生接力比賽',"Principal's Cup staff–student relay")]),
+  S('14:10',[R(82,82,'校友接力比賽','Alumni relay')]),
+  S('14:15',[R('cheer',null,'啦啦隊表演','Cheerleading performance','show')]),
+  S('15:00',[R('close',null,'閉幕典禮','Closing ceremony','show')])
+ ]}
+];
+var KIND={track:'Track',field:'Field',relay:'Relay',show:'Show'};
+var BYID={};
+DAYS.forEach(function(day){
+  day.slots.forEach(function(slot){
+    var p=slot.t.split(':');
+    slot.min=+p[0]*60+ +p[1];
+    slot.id='d'+day.id+'-'+slot.t;
+    slot.day=day;
+    (slot.items||[]).forEach(function(ev){
+      ev.id='d'+day.id+'-'+ev.key;
+      ev.slot=slot;
+      if(ev.kind==='track'||ev.kind==='field'){
+        ev.zhTitle=ev.cat+' '+ev.ev+' '+ev.rd;
+        ev.enTitle=CAT[ev.cat]+' '+EVN[ev.ev]+' '+RD[ev.rd];
+        ev.meta=ev.c+(ev.c===1?' athlete':' athletes');
+        ev.sum=EVN[ev.ev]+(ev.kind==='track'?' '+RD[ev.rd]:'');
+      }else{
+        ev.zhTitle=ev.zh; ev.enTitle=ev.en; ev.meta='';
+      }
+      BYID[ev.id]=ev;
+    });
+  });
+});
+
+/* ---------- State ---------- */
+// Per-device settings stay in this browser. Everything else is shared through the server.
+var LKEY='sportsday.local.v1', CKEY='sportsday.cache.v1';
+var lc={hide:false,wake:true,sound:true,dayIdx:null};
+try{var lj=JSON.parse(localStorage.getItem(LKEY));if(lj)for(var lk in lj)lc[lk]=lj[lk];}catch(e){}
+function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify(lc));}catch(e){}}
+
+var server=emptyState();   // last state confirmed by the server
+var pending=[];            // operations sent (or waiting to be sent) and not yet confirmed
+var st=emptyState();       // what the screen shows: server state plus pending operations
+var skew=0, samples=[], peers=0, connState='connecting', gotState=false, primed=false;
+try{
+  var cj=JSON.parse(localStorage.getItem(CKEY));
+  if(cj){if(cj.server)server=Object.assign(emptyState(),cj.server);if(Array.isArray(cj.pending))pending=cj.pending;}
+}catch(e){}
+function recompute(){var s=server;for(var i=0;i<pending.length;i++)s=applyOp(s,pending[i]);st=s;}
+function cache(){try{localStorage.setItem(CKEY,JSON.stringify({server:server,pending:pending}));}catch(e){}}
+recompute();
+
+var ws=null;
+function send(op){
+  op.oid=Math.random().toString(36).slice(2)+Date.now().toString(36);
+  pending.push(op);cache();recompute();update();
+  if(ws&&ws.readyState===1)ws.send(JSON.stringify({t:'op',op:op}));
+}
+function now(){return Date.now()+skew+(st.offset||0);}
+
+/* ---------- Time helpers (all in the venue's time zone) ---------- */
+function pad(n){return n<10?'0'+n:''+n;}
+function hhmm(ms){var d=new Date(ms+TZ*60000);return pad(d.getUTCHours())+':'+pad(d.getUTCMinutes());}
+function hhmmss(ms){var d=new Date(ms+TZ*60000);return pad(d.getUTCHours())+':'+pad(d.getUTCMinutes())+':'+pad(d.getUTCSeconds());}
+function mmToStr(m){return pad(Math.floor(m/60))+':'+pad(m%60);}
+function strToMm(s){var p=(s||'').split(':');if(p.length<2)return NaN;return +p[0]*60+ +p[1];}
+function dur(ms){
+  var m=Math.floor(ms/60000);
+  if(m<1)return 'under 1 min';
+  if(m<60)return m+' min';
+  return Math.floor(m/60)+' h '+(m%60?(m%60)+' min':'');
+}
+function slotMin(slot){var o=st.over[slot.id];return o!=null?o:slot.min;}
+function evMin(ev){return slotMin(ev.slot)+(st.evd[ev.id]||0);}
+function dayMs(day,min){var d=day.date;return Date.UTC(d[0],d[1]-1,d[2],0,min,0,0)-TZ*60000;}
+function startMs(ev){return dayMs(ev.slot.day,evMin(ev));}
+function dueMs(ev,k){return startMs(ev)-st.th[k-1]*60000;}
+function clampMin(v){return Math.max(0,Math.min(1439,v));}
+
+/* ---------- Evaluate one event ---------- */
+function evaluate(ev,t){
+  var calls=st.calls[ev.id]||[];
+  var start=startMs(ev);
+  var pips=[],level=0,late=0;
+  for(var k=1;k<=3;k++){
+    var due=dueMs(ev,k);
+    if(calls[k-1]!=null){
+      var isLate=calls[k-1]>due;
+      if(isLate)late++;
+      pips.push({s:'made',late:isLate});
+    }else{
+      var od=t>=due;
+      pips.push({s:od?'due':'wait',k:k});
+      if(od)level=k;
+    }
+  }
+  return {n:calls.length,start:start,pips:pips,level:level,late:late};
+}
+
+/* ---------- Sound ---------- */
+var actx=null;
+function audio(){
+  if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}
+  return actx;
+}
+function unlock(){
+  var a=audio();
+  if(a&&a.state==='suspended'){a.resume().then(renderSound).catch(function(){});}
+  renderSound();
+}
+['click','touchend','keydown'].forEach(function(n){document.addEventListener(n,unlock,{passive:true});});
+function renderSound(){
+  $('snd-enable').hidden=!(lc.sound&&!(actx&&actx.state==='running'));
+}
+function tone(freq,start,len,type,gain){
+  var a=actx,o=a.createOscillator(),g=a.createGain();
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(0,start);
+  g.gain.linearRampToValueAtTime(gain,start+0.01);
+  g.gain.setValueAtTime(gain,start+len-0.03);
+  g.gain.linearRampToValueAtTime(0,start+len);
+  o.connect(g);g.connect(a.destination);
+  o.start(start);o.stop(start+len+0.02);
+}
+// One low beep, two mid beeps, three sharp high beeps.
+var PATTERNS={
+  1:{f:660,len:.24,n:1,type:'sine',gain:.35,vib:[200]},
+  2:{f:880,len:.15,n:2,type:'sine',gain:.4,vib:[120,80,120]},
+  3:{f:1240,len:.11,n:3,type:'square',gain:.2,vib:[90,60,90,60,90]}
+};
+function beep(level,force){
+  if(!lc.sound&&!force)return;
+  var a=audio();
+  if(!a||a.state!=='running')return;
+  var p=PATTERNS[level],t=a.currentTime+0.03;
+  for(var i=0;i<p.n;i++){tone(p.f,t,p.len,p.type,p.gain);t+=p.len+0.09;}
+  if(navigator.vibrate){try{navigator.vibrate(p.vib);}catch(e){}}
+}
+var lastLv={};
+function checkBeeps(t){
+  var top=0;
+  for(var id in BYID){
+    var lv=evaluate(BYID[id],t).level;
+    if(primed&&lv>(lastLv[id]||0)&&lv>top)top=lv;
+    lastLv[id]=lv;
+  }
+  if(top)beep(top);
+}
+
+/* ---------- DOM ---------- */
+var $=function(id){return document.getElementById(id);};
+var listEl=$('list');
+var rows={};
+var slotEls=[];
+var dayIdx=0;
+
+function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+
+function buildList(){
+  listEl.innerHTML='';rows={};slotEls=[];
+  var day=DAYS[dayIdx];
+  day.slots.forEach(function(slot){
+    var sec=el('section','slot'+(slot.marker?' marker':''));
+    var h=el('div','slot-h');
+    var time=el('span','slot-time',mmToStr(slot.min));
+    h.appendChild(time);
+    var info={slot:slot,time:time,rows:[]};
+    if(slot.marker){
+      h.appendChild(el('span','mk',slot.marker.zh+' · '+slot.marker.en));
+    }else{
+      info.delay=el('span','delay');info.delay.hidden=true;h.appendChild(info.delay);
+      info.meta=el('span','slot-meta');h.appendChild(info.meta);
+      var chg=el('button','chg','Change time');chg.type='button';chg.setAttribute('data-slot',slot.id);h.appendChild(chg);
+      var names=[];slot.items.forEach(function(ev){if(ev.sum&&names.indexOf(ev.sum)<0)names.push(ev.sum);});
+      if(names.length)h.appendChild(el('div','slot-sum',names.join(' · ')));
+    }
+    sec.appendChild(h);
+    if(slot.items){
+      var ul=el('ul','evs');
+      slot.items.forEach(function(ev){
+        var li=el('li','ev');
+        var no=el('div','no');no.appendChild(el('b',null,ev.n!=null?'#'+ev.n:'·'));no.appendChild(el('span',null,KIND[ev.kind]));
+        var what=el('div','what');what.appendChild(el('div','zh',ev.zhTitle));what.appendChild(el('div','en',ev.enTitle));what.appendChild(el('div','meta',ev.meta));
+        var state=el('div','state');
+        var pips=el('span','pips');for(var k=1;k<=3;k++)pips.appendChild(el('i',null,''+k));
+        var msg=el('span','msg');
+        var undo=el('button','undo','Undo');undo.type='button';undo.setAttribute('data-undo',ev.id);
+        var tb=el('span','delay');tb.hidden=true;
+        var dly=el('button','undo','Delay');dly.type='button';dly.setAttribute('data-evdelay',ev.id);
+        state.appendChild(pips);state.appendChild(tb);state.appendChild(msg);state.appendChild(undo);state.appendChild(dly);
+        var act=el('div','act');
+        var call=el('button','call');call.type='button';call.setAttribute('data-call',ev.id);
+        act.appendChild(call);
+        li.appendChild(no);li.appendChild(what);li.appendChild(state);li.appendChild(act);
+        ul.appendChild(li);
+        var r={el:li,ev:ev,pips:pips.children,msg:msg,undo:undo,call:call,tb:tb};
+        rows[ev.id]=r;info.rows.push(r);
+      });
+      sec.appendChild(ul);
+    }
+    listEl.appendChild(sec);
+    slotEls.push(info);
+  });
+  update();
+}
+
+function renderConn(){
+  var c=$('conn'),n=pending.length;
+  if(connState==='live'){
+    c.className='conn ok';
+    c.textContent='Live · '+peers+(peers===1?' device':' devices')+(n?' · sending '+n:'');
+  }else if(connState==='connecting'){
+    c.className='conn';c.textContent='Connecting…';
+  }else{
+    c.className='conn bad';c.textContent='Offline'+(n?' · '+n+' unsent':' · retrying');
+  }
+}
+
+function update(){
+  var t=now();
+  $('clock').textContent=hhmmss(t);
+  $('rehearsal').hidden=Math.abs(st.offset||0)<1000;
+  renderConn();
+  for(var q=1;q<=3;q++){var ti=$('th'+q);if(document.activeElement!==ti)ti.value=st.th[q-1];}
+  var overdue=0,maxLevel=0,nextDue=null,nextEv=null,nextK=0,pending_=0;
+  slotEls.forEach(function(info){
+    var left=0,evCount=0;
+    if(!info.slot.marker){
+      info.time.textContent=mmToStr(slotMin(info.slot));
+      var dl=slotMin(info.slot)-info.slot.min;
+      info.delay.hidden=dl===0;
+      info.delay.textContent=(dl>0?'+':'−')+Math.abs(dl)+' min';
+    }
+    info.rows.forEach(function(r){
+      var ev=r.ev,e=evaluate(ev,t);
+      evCount++;
+      var done=e.n>=3;
+      left+=3-e.n;
+      var k=e.n+1;
+      r.el.hidden=lc.hide&&done;
+      r.el.className='ev'+(done?' done':'')+(e.level?' st'+e.level:'');
+      for(var i=0;i<3;i++){
+        var p=e.pips[i],pe=r.pips[i];
+        pe.className=p.s==='made'?('made'+(p.late?' late':'')):(p.s==='due'?('due l'+p.k):'');
+      }
+      if(done){
+        r.call.textContent='Done';r.call.disabled=true;
+        r.msg.textContent='All 3 calls made'+(e.late?' · '+e.late+' late':'');
+        r.call.setAttribute('aria-label','All calls made for '+ev.zhTitle);
+      }else{
+        pending_++;
+        r.call.disabled=false;
+        r.call.textContent=k===3?'Final call':'Call '+k;
+        r.call.setAttribute('aria-label','Record call '+k+' for '+ev.enTitle);
+        var due=dueMs(ev,k),diff=due-t;
+        if(t>=e.start){
+          r.msg.textContent='Started '+(t-e.start<60000?'just now':dur(t-e.start)+' ago')+' · '+(3-e.n)+' call'+(3-e.n>1?'s':'')+' not made';
+        }else if(diff<=0){
+          var more=[];
+          for(var j=k+1;j<=3;j++){if(e.pips[j-1].s==='due')more.push(j===3?'final call':'call '+j);}
+          r.msg.textContent='Call '+k+' overdue '+(-diff<60000?'just now':'by '+dur(-diff))+(more.length?' · '+more.join(' and ')+' also overdue':'');
+        }else{
+          r.msg.textContent='Call '+k+' due '+hhmm(due)+' · in '+dur(diff);
+          if(nextDue==null||due<nextDue){nextDue=due;nextEv=ev;nextK=k;}
+        }
+        if(e.level){overdue++;if(e.level>maxLevel)maxLevel=e.level;}
+      }
+      r.undo.hidden=e.n===0;
+      var dm=st.evd[ev.id]||0;
+      r.tb.hidden=!dm;
+      if(dm)r.tb.textContent=mmToStr(evMin(ev))+' ('+(dm>0?'+':'−')+Math.abs(dm)+')';
+    });
+    if(info.meta){
+      info.meta.textContent=left?evCount+' events · '+left+' calls left':'All called';
+    }
+  });
+  var strip=$('strip-next');
+  strip.innerHTML='';
+  if(overdue){
+    strip.appendChild(el('span','badge l'+maxLevel,overdue+' overdue'));
+  }else if(!pending_){
+    strip.appendChild(el('span','badge ok','Day complete'));
+  }else{
+    strip.appendChild(el('span','badge ok','On track'));
+  }
+  if(nextEv){
+    var s=el('span');
+    s.appendChild(document.createTextNode('Next: '));
+    s.appendChild(el('b',null,'call '+nextK+(nextEv.n!=null?' · #'+nextEv.n:'')));
+    s.appendChild(document.createTextNode(' '+nextEv.zhTitle+' at '+hhmm(nextDue)+' (in '+dur(nextDue-t)+')'));
+    strip.appendChild(s);
+  }
+  checkBeeps(t);
+}
+
+/* ---------- Interactions ---------- */
+function recordCall(id){
+  var c=st.calls[id]||[];
+  if(c.length>=3)return;
+  send({t:'call',id:id,expect:c.length,ts:now()});
+  if(navigator.vibrate){try{navigator.vibrate(14);}catch(e){}}
+}
+function undoCall(id){
+  var c=st.calls[id]||[];
+  if(!c.length)return;
+  send({t:'undo',id:id,expect:c.length});
+}
+listEl.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  if(b.hasAttribute('data-call'))recordCall(b.getAttribute('data-call'));
+  else if(b.hasAttribute('data-undo'))undoCall(b.getAttribute('data-undo'));
+  else if(b.hasAttribute('data-slot'))openAdjust(b.getAttribute('data-slot'));
+  else if(b.hasAttribute('data-evdelay'))openAdjustEv(b.getAttribute('data-evdelay'));
+});
+
+function setDay(i){
+  dayIdx=i;lc.dayIdx=i;saveLocal();
+  for(var d=0;d<2;d++){$('tab-'+d).setAttribute('aria-selected',d===i?'true':'false');}
+  buildList();
+}
+$('tab-0').addEventListener('click',function(){setDay(0);});
+$('tab-1').addEventListener('click',function(){setDay(1);});
+$('hide-done').addEventListener('change',function(e){lc.hide=e.target.checked;saveLocal();update();});
+$('snd-enable').addEventListener('click',function(){unlock();beep(1);});
+
+/* Sheets */
+function openSheet(id){var s=$(id);s.hidden=false;var c=s.querySelector('[data-close]');if(c)c.focus();}
+function closeSheet(id){$(id).hidden=true;}
+document.addEventListener('click',function(e){
+  var c=e.target.closest('[data-close]');
+  if(c)closeSheet(c.getAttribute('data-close'));
+  if(e.target.classList&&e.target.classList.contains('scrim'))e.target.hidden=true;
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){closeSheet('adj-scrim');closeSheet('set-scrim');}
+});
+
+/* Change the start time of a slot, or of one event */
+var adjSlot=null,adjEv=null;
+function openAdjustEv(id){
+  var ev=BYID[id];if(!ev)return;
+  adjEv=ev;adjSlot=null;
+  $('adj-title').textContent='Delay one event';
+  $('adj-sub').textContent=(ev.n!=null?'#'+ev.n+' ':'')+ev.enTitle+' · slot time '+mmToStr(slotMin(ev.slot))+' · now '+mmToStr(evMin(ev));
+  $('adj-time').value=mmToStr(evMin(ev));
+  $('adj-later-row').hidden=true;
+  $('adj-printed').textContent='Slot time';
+  openSheet('adj-scrim');
+}
+function openAdjust(slotId){
+  var slot=null;
+  DAYS[dayIdx].slots.forEach(function(s){if(s.id===slotId)slot=s;});
+  if(!slot)return;
+  adjSlot=slot;adjEv=null;
+  $('adj-title').textContent='Change start time';
+  $('adj-later-row').hidden=false;
+  $('adj-printed').textContent='Printed time';
+  $('adj-sub').textContent='Printed time '+slot.t+' · now '+mmToStr(slotMin(slot));
+  $('adj-time').value=mmToStr(slotMin(slot));
+  $('adj-later').checked=true;
+  openSheet('adj-scrim');
+}
+$('adj-quick').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b||(!adjSlot&&!adjEv))return;
+  if(b.id==='adj-printed'){$('adj-time').value=mmToStr(adjEv?slotMin(adjEv.slot):adjSlot.min);return;}
+  var d=+b.getAttribute('data-d');
+  var cur=strToMm($('adj-time').value);if(isNaN(cur))cur=adjEv?evMin(adjEv):slotMin(adjSlot);
+  $('adj-time').value=mmToStr(clampMin(cur+d));
+});
+$('adj-apply').addEventListener('click',function(){
+  if(!adjSlot&&!adjEv)return;
+  var nv=strToMm($('adj-time').value);
+  if(isNaN(nv))return;
+  if(adjEv){
+    var one={},dd=nv-slotMin(adjEv.slot);
+    one[adjEv.id]=dd===0?null:dd;
+    send({t:'evd',set:one});
+    closeSheet('adj-scrim');return;
+  }
+  var delta=nv-slotMin(adjSlot),set={};
+  var later=$('adj-later').checked,go=false;
+  adjSlot.day.slots.forEach(function(s){
+    if(s.marker)return;
+    if(s===adjSlot){go=true;}
+    else if(!go||!later)return;
+    var v=clampMin(slotMin(s)+delta);
+    set[s.id]=v===s.min?null:v;
+  });
+  send({t:'over',set:set});
+  closeSheet('adj-scrim');
+});
+
+/* Settings */
+function bindTh(){
+  function commit(){
+    var th=[];
+    for(var k=1;k<=3;k++){
+      var v=parseInt($('th'+k).value,10);
+      if(isNaN(v)||v<0)v=st.th[k-1];
+      th.push(Math.min(180,v));
+    }
+    send({t:'th',th:th});
+  }
+  for(var k=1;k<=3;k++)$('th'+k).addEventListener('change',commit);
+}
+bindTh();
+$('open-settings').addEventListener('click',function(){
+  $('sound').checked=!!lc.sound;
+  $('wake').checked=!!lc.wake;
+  $('delay-day').textContent='Day '+(dayIdx+1);
+  $('delay-note').textContent='';
+  $('reh').value=new Date(now()+TZ*60000).toISOString().slice(0,16);
+  openSheet('set-scrim');
+});
+$('sound').addEventListener('change',function(e){lc.sound=e.target.checked;saveLocal();if(lc.sound)unlock();renderSound();});
+$('set-scrim').addEventListener('click',function(e){
+  var b=e.target.closest('[data-beep]');if(!b)return;
+  unlock();beep(+b.getAttribute('data-beep'),true);
+});
+$('wake').addEventListener('change',function(e){
+  lc.wake=e.target.checked;saveLocal();
+  if(lc.wake)requestWake();else releaseWake();
+});
+$('delay-quick').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  $('delay-all').value=b.getAttribute('data-dd');
+});
+$('delay-apply').addEventListener('click',function(){
+  var d=parseInt($('delay-all').value,10);
+  if(isNaN(d)||d===0){$('delay-note').textContent='Enter the number of minutes first.';return;}
+  var onlyFuture=$('delay-future').checked,t=now(),n=0,set={};
+  DAYS[dayIdx].slots.forEach(function(s){
+    if(s.marker)return;
+    if(onlyFuture&&dayMs(s.day,slotMin(s))<=t)return;
+    var v=clampMin(slotMin(s)+d);
+    set[s.id]=v===s.min?null:v;
+    n++;
+  });
+  if(n)send({t:'over',set:set});
+  $('delay-note').textContent=n?'Moved '+n+' start time'+(n>1?'s':'')+' by '+(d>0?'+':'−')+Math.abs(d)+' min.':'Nothing to move: every slot has already started.';
+});
+$('reh-set').addEventListener('click',function(){
+  var m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec($('reh').value||'');
+  if(!m)return;
+  var target=Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5])-TZ*60000;
+  send({t:'offset',v:target-(Date.now()+skew)});
+  closeSheet('set-scrim');
+});
+$('reh-off').addEventListener('click',function(){send({t:'offset',v:0});closeSheet('set-scrim');});
+$('reset-times').addEventListener('click',function(){send({t:'resetTimes'});});
+var armed=null;
+$('reset-calls').addEventListener('click',function(e){
+  var b=e.currentTarget;
+  function disarm(){armed=null;b.textContent='Clear all call counts';b.classList.remove('warn');b.classList.add('sec');}
+  if(armed){clearTimeout(armed);disarm();send({t:'resetCalls'});}
+  else{
+    b.textContent='Tap again to clear everything';b.classList.add('warn');b.classList.remove('sec');
+    armed=setTimeout(disarm,4000);
+  }
+});
+$('sign-out').addEventListener('click',function(){
+  fetch('/api/logout',{method:'POST'}).finally(function(){
+    try{localStorage.removeItem(CKEY);}catch(e){}
+    location.reload();
+  });
+});
+
+/* Keep the screen awake while the page is open */
+var wl=null;
+function requestWake(){
+  try{
+    if(lc.wake&&'wakeLock' in navigator&&document.visibilityState==='visible'&&!wl){
+      navigator.wakeLock.request('screen').then(function(l){wl=l;l.addEventListener('release',function(){wl=null;});}).catch(function(){});
+    }
+  }catch(e){}
+}
+function releaseWake(){try{if(wl){wl.release();wl=null;}}catch(e){}}
+
+/* ---------- Live connection ---------- */
+var retry=0,lastPong=0;
+function connect(){
+  if(ws)return;
+  connState=gotState?'offline':'connecting';renderConn();
+  var sock;
+  try{sock=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+'/api/ws');}
+  catch(e){scheduleRetry();return;}
+  ws=sock;
+  sock.onopen=function(){
+    retry=0;connState='live';lastPong=Date.now();renderConn();
+    pending.forEach(function(op){sock.send(JSON.stringify({t:'op',op:op}));});
+    sock.send(JSON.stringify({t:'ping',c:Date.now()}));
+  };
+  sock.onmessage=function(ev){
+    var m;try{m=JSON.parse(ev.data);}catch(e){return;}
+    if(m.t==='state'){
+      if(!gotState){
+        skew=m.s-Date.now();            // first estimate of the server clock, refined by pings
+        primed=false;
+      }
+      server=Object.assign(emptyState(),m.state);
+      if(m.acks&&m.acks.length)pending=pending.filter(function(o){return m.acks.indexOf(o.oid)<0;});
+      peers=m.peers||peers;
+      cache();recompute();update();
+      if(!gotState){gotState=true;primed=true;}
+    }else if(m.t==='pong'){
+      lastPong=Date.now();
+      var rtt=Date.now()-m.c;
+      samples.push({rtt:rtt,skew:m.s+rtt/2-Date.now()});
+      if(samples.length>6)samples.shift();
+      skew=samples.reduce(function(a,b){return b.rtt<a.rtt?b:a;}).skew;
+      update();
+    }
+  };
+  sock.onclose=function(){
+    if(ws===sock){ws=null;connState='offline';peers=0;renderConn();scheduleRetry();}
+  };
+  sock.onerror=function(){try{sock.close();}catch(e){}};
+}
+function scheduleRetry(){
+  retry++;
+  if(retry>=2){ // a signed-out session cannot connect: go back to the sign-in page
+    fetch('/api/me',{cache:'no-store'}).then(function(r){if(r.status===401)location.reload();}).catch(function(){});
+  }
+  setTimeout(connect,Math.min(5000,700*retry));
+}
+setInterval(function(){
+  if(ws&&ws.readyState===1){
+    if(Date.now()-lastPong>22000){try{ws.close();}catch(e){}return;}
+    ws.send(JSON.stringify({t:'ping',c:Date.now()}));
+  }
+},8000);
+window.addEventListener('online',function(){if(!ws)connect();});
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'){requestWake();if(!ws)connect();update();}
+});
+
+/* ---------- Boot ---------- */
+$('hide-done').checked=!!lc.hide;
+var first=lc.dayIdx;
+if(first!==0&&first!==1){
+  var n0=new Date(Date.now()+TZ*60000);
+  first=(n0.getUTCMonth()>9||(n0.getUTCMonth()===9&&n0.getUTCDate()>=28))?1:0;
+}
+setDay(first);
+renderSound();
+setInterval(update,1000);
+setTimeout(function(){if(!gotState)primed=true;},4000);
+requestWake();
+connect();
+</script>
+</body>
+</html>

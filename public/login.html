@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Call Sheet Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;700&display=swap">
+<style>
+:root{--bg:#f1f2ef;--surface:#fafaf8;--ink:#171b1e;--muted:#5b6469;--rule:#d3d7d2;--accent:#1c2b36;--on-accent:#fff;--l3:#c42b1f;
+  --sans:"IBM Plex Sans","Noto Sans TC","PingFang HK","Microsoft JhengHei",system-ui,sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#111415;--surface:#181c1e;--ink:#e9ecea;--muted:#97a0a4;--rule:#2c3336;--accent:#e1e7ea;--on-accent:#111415;--l3:#ff6a5c;color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.4 var(--sans);display:grid;place-items:center;padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px))}
+main{width:100%;max-width:360px;background:var(--surface);border-top:3px solid var(--ink);padding:22px 20px 24px}
+h1{margin:0;font-size:20px;font-weight:600}
+p{margin:4px 0 18px;color:var(--muted);font-size:13px}
+label{display:block;font-weight:500;margin-bottom:6px}
+input{width:100%;font:inherit;font-size:16px;padding:12px;border:1px solid var(--muted);border-radius:2px;background:var(--bg);color:var(--ink)}
+button{margin-top:14px;width:100%;min-height:48px;border:0;border-radius:3px;background:var(--accent);color:var(--on-accent);font:inherit;font-weight:600}
+button:disabled{opacity:.6}
+.err{margin-top:10px;color:var(--l3);font-weight:600;font-size:14px}
+:focus-visible{outline:3px solid #1f5ea8;outline-offset:2px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Sports Day Call Sheet</h1>
+  <p>第30屆陸運會 · Enter the team password to continue.</p>
+  <form id="f" autocomplete="on">
+    <label for="pw">Password</label>
+    <input id="pw" name="password" type="password" autocomplete="current-password" autofocus required>
+    <button id="go" type="submit">Sign in</button>
+    <div class="err" id="err" role="alert" hidden></div>
+  </form>
+</main>
+<script>
+document.getElementById('f').addEventListener('submit',function(e){
+  e.preventDefault();
+  var btn=document.getElementById('go'),err=document.getElementById('err');
+  btn.disabled=true;err.hidden=true;
+  fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:document.getElementById('pw').value})})
+    .then(function(r){
+      if(r.ok){location.replace('/');return;}
+      err.textContent=r.status===401?'Wrong password. Try again.':'Could not sign in ('+r.status+').';
+      err.hidden=false;btn.disabled=false;document.getElementById('pw').select();
+    })
+    .catch(function(){err.textContent='No connection. Check your network and try again.';err.hidden=false;btn.disabled=false;});
+});
+</script>
+</body>
+</html>

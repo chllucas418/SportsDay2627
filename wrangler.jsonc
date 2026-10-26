@@ -1,0 +1,21 @@
+{
+  "name": "sports-day-call-sheet",
+  "main": "src/worker.js",
+  "compatibility_date": "2025-01-01",
+
+  // The password is NOT stored here. Set it once with:  npx wrangler secret put APP_PASSWORD
+  // To serve it on your own domain, add (replace with your hostname):
+  // "routes": [{ "pattern": "sportsday.example.com", "custom_domain": true }],
+
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "html_handling": "none",
+    "not_found_handling": "none"
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "ROOM", "class_name": "Room" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }]
+}

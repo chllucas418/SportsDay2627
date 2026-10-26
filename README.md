@@ -1,0 +1,70 @@
+# Sports Day Call Sheet (Cloudflare)
+
+Announcer call sheet for the 30th Athletics Meet (27–28 Oct 2026). Several people can sign in with one password. Call counts, delays, the call deadlines and the rehearsal clock are shared live between all devices.
+
+## What is in here
+
+| Path | What it does |
+| --- | --- |
+| `src/worker.js` | Worker: password sign-in, signed session cookie, serves the pages, and a Durable Object (`Room`) that keeps the shared state and pushes changes over WebSockets. |
+| `public/app.html` | The call sheet. Only served to signed-in users. |
+| `public/login.html` | Sign-in page. Shown to everyone who is not signed in. |
+| `public/shared.js` | The rules for changing the shared state. Used by the Worker (authoritative) and by the browser (instant on-screen update). |
+| `wrangler.jsonc` | Cloudflare config. |
+
+## Deploy
+
+1. Install and sign in to Cloudflare:
+
+   ```sh
+   npm install
+   npx wrangler login
+   ```
+
+2. Set the password (it is a Worker secret, never stored in the repository):
+
+   ```sh
+   npx wrangler secret put APP_PASSWORD
+   ```
+
+   Enter the password when asked.
+
+3. Deploy:
+
+   ```sh
+   npx wrangler deploy
+   ```
+
+4. Put it on your domain. Either add the domain under Workers & Pages, then your Worker, then Settings, then Domains & Routes, or add this to `wrangler.jsonc` and deploy again (the domain must be a zone in your Cloudflare account):
+
+   ```jsonc
+   "routes": [{ "pattern": "sportsday.example.com", "custom_domain": true }]
+   ```
+
+If you deploy from GitHub with Workers Builds, add `APP_PASSWORD` under the Worker's Settings, then Variables and Secrets, as a **Secret**.
+
+Durable Objects with SQLite storage work on the free plan.
+
+## Run it locally
+
+```sh
+npm install
+echo 'APP_PASSWORD=choose-a-password' > .dev.vars
+npm run dev
+```
+
+Open http://localhost:8787. `.dev.vars` is git-ignored.
+
+## How it behaves
+
+- **Sign-in:** One shared password. A wrong password waits 0.7 seconds before it answers. A session lasts 7 days. Changing `APP_PASSWORD` signs everyone out. The call sheet and the live connection are not available without signing in.
+- **Live sync:** Every tap, delay and setting goes to the Durable Object, which saves it and sends the new state to every connected device. The header shows `Live · N devices`.
+- **Same call from two phones:** If two devices tap the same call at the same moment, it is recorded once.
+- **Dropped signal:** Taps made while offline are kept on the device (`Offline · N unsent`) and sent when the connection returns. The last known state is shown while offline.
+- **One clock:** Every device uses the server's clock, and the venue time zone (UTC+8, set by `TZ` at the top of the script in `app.html`) instead of the phone's own settings. The rehearsal clock is shared too, so all devices practise together.
+- **Beeps:** When a call becomes overdue each device beeps: one low beep (call 1), two beeps (call 2), three sharp high beeps (final call). Browsers only allow sound after a first tap on the page, so tap **Enable sound** once after opening. Beeps are a per-device setting.
+- **Per-device settings** (kept in that browser only): which day tab is open, Hide finished, Keep the screen on, and sound on or off.
+
+## Before the event
+
+Run a rehearsal: Settings, then Rehearsal clock, set the time to 09:00 on 27 Oct, practise, then **Clear all call counts** and **Back to real time**.
