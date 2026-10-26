@@ -3,7 +3,7 @@
 // Every operation is idempotent: re-sending one after a dropped connection is harmless.
 
 export function emptyState() {
-  return { calls: {}, over: {}, evd: {}, th: [20, 10, 5], offset: 0 };
+  return { calls: {}, over: {}, evd: {}, th: [20, 10, 5], offset: 0, relay: 'all' };
 }
 
 const ID = /^d[12]-[A-Za-z0-9:]{1,12}$/;
@@ -54,6 +54,8 @@ export function applyOp(s, op) {
     }
     case 'offset':
       return isNum(op.v, -1e10, 1e10) ? Object.assign({}, s, { offset: Math.round(op.v) }) : s;
+    case 'relay':
+      return op.v === 'all' || op.v === 'each' ? Object.assign({}, s, { relay: op.v }) : s;
     case 'resetCalls':
       return Object.assign({}, s, { calls: {} });
     case 'resetTimes':

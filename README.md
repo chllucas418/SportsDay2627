@@ -62,6 +62,7 @@ Open http://localhost:8787. `.dev.vars` is git-ignored.
 - **Same call from two phones:** If two devices tap the same call at the same moment, it is recorded once.
 - **Dropped signal:** Taps made while offline are kept on the device (`Offline · N unsent`) and sent when the connection returns. The last known state is shown while offline.
 - **One clock:** Every device uses the server's clock, and the venue time zone (UTC+8, set by `TZ` at the top of the script in `app.html`) instead of the phone's own settings. The rehearsal clock is shared too, so all devices practise together.
+- **Inter-class relay (#35, Day 1):** Six races, Form 1 to Form 6, 7 minutes apart from 14:45 (14:45, 14:52, 14:59, 15:06, 15:13, 15:20), ending before #39 at 15:30. A switch in the 14:45 block chooses **All grades at once** (one row, one set of three calls, deadlines from 14:45) or **Grade by grade** (six rows, each with its own three calls and deadlines). Every device follows the switch. The two modes keep separate call counts, so choose one before the relays start. To change the spacing, edit the `off:(i-1)*7` expression in `FORMS()` in `public/app.html`.
 - **Beeps:** When a call becomes overdue each device beeps: one low beep (call 1), two beeps (call 2), three sharp high beeps (final call). Browsers only allow sound after a first tap on the page, so tap **Enable sound** once after opening. Beeps are a per-device setting.
 - **Per-device settings** (kept in that browser only): which day tab is open, Hide finished, Keep the screen on, and sound on or off.
 

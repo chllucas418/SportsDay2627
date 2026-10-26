@@ -84,6 +84,12 @@ main{padding-top:6px}
 .slot-meta{margin-left:auto;font-size:13px;color:var(--muted)}
 .chg{background:transparent;border:0;padding:6px 0 6px 4px;color:var(--l1);font-weight:600;font-size:13px;text-decoration:underline;text-underline-offset:3px}
 .slot-sum{flex-basis:100%;font-size:13px;color:var(--muted)}
+.mode{flex-basis:100%;display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;font-size:13px;color:var(--muted);padding-bottom:4px}
+.seg{display:inline-flex}
+.seg button{padding:8px 12px;border:1px solid var(--muted);background:transparent;font-weight:600;font-size:13px}
+.seg button+button{border-left:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.tm{font:600 12px var(--mono);border:1px solid var(--muted);padding:1px 6px;color:var(--ink)}
 .slot.marker .slot-h{border-top:1px dashed var(--muted)}
 .slot.marker .slot-time,.slot.marker .mk{color:var(--muted)}
 .mk{font-size:14px}
@@ -267,7 +273,14 @@ var EVN={'400米':'400m','1500米':'1500m','100米':'100m','100米欄':'100m Hur
 var RD={'初賽':'Heats','決賽':'Final'};
 function T(n,cat,ev,rd,c){return {key:n,n:n,kind:'track',cat:cat,ev:ev,rd:rd,c:c};}
 function F(n,cat,ev,c){return {key:n,n:n,kind:'field',cat:cat,ev:ev,rd:'決賽',c:c};}
-function R(key,n,zh,en,kind){return {key:key,n:n,kind:kind||'relay',zh:zh,en:en};}
+function R(key,n,zh,en,kind,x){var e={key:key,n:n,kind:kind||'relay',zh:zh,en:en};if(x)for(var k in x)e[k]=x[k];return e;}
+// The inter-class relay (#35) runs as six races, Form 1 to Form 6, 7 minutes apart.
+// It can be called all at once ('all') or race by race ('each'); the switch is shared by all devices.
+function FORMS(){
+  var zhNum=['','一','二','三','四','五','六'],o=[];
+  for(var i=1;i<=6;i++)o.push(R('35f'+i,35,'中'+zhNum[i]+' 班際接力比賽','Form '+i+' Inter-class relay','relay',{relayMode:'each',off:(i-1)*7,tag:'Form '+i,meta:'Race '+i+' of 6',sum:'Inter-class relay'}));
+  return o;
+}
 function S(t,items){return {t:t,items:items};}
 function M(t,zh,en){return {t:t,marker:{zh:zh,en:en}};}
 
@@ -283,7 +296,7 @@ var DAYS=[
   S('14:00',[T(21,'男甲','100米欄','決賽',5),T(22,'男乙','100米欄','決賽',3),T(23,'男丙','100米欄','決賽',1),T(24,'女甲','100米欄','決賽',4),T(25,'女乙','100米欄','決賽',2),T(26,'女丙','100米欄','決賽',5),
              T(27,'女丙','200米','初賽',15),T(28,'男丙','200米','初賽',19),T(29,'男乙','200米','初賽',13),T(30,'男甲','200米','初賽',9),
              F(31,'男甲','跳遠',8),F(32,'男乙','鐵餅',6),F(33,'男丙','鉛球',22),F(34,'女乙','跳高',20)]),
-  S('14:45',[R(35,35,'班際接力比賽','Inter-class relay'),F(36,'女甲','鉛球',25),F(37,'女乙','標槍',14),F(38,'女丙','跳遠',37)]),
+  S('14:45',[R(35,35,'班際接力比賽','Inter-class relay (Forms 1–6, all grades)','relay',{relayMode:'all',meta:'Six races, Form 1 to Form 6, called together',sum:'Inter-class relay'})].concat(FORMS(),[F(36,'女甲','鉛球',25),F(37,'女乙','標槍',14),F(38,'女丙','跳遠',37)])),
   S('15:30',[R(39,39,'制服隊伍接力比賽','Uniformed groups relay')]),
   S('15:45',[R(40,40,'中六畢業跑','Form 6 graduation run')])
  ]},
@@ -323,7 +336,7 @@ DAYS.forEach(function(day){
         ev.meta=ev.c+(ev.c===1?' athlete':' athletes');
         ev.sum=EVN[ev.ev]+(ev.kind==='track'?' '+RD[ev.rd]:'');
       }else{
-        ev.zhTitle=ev.zh; ev.enTitle=ev.en; ev.meta='';
+        ev.zhTitle=ev.zh; ev.enTitle=ev.en; ev.meta=ev.meta||'';
       }
       BYID[ev.id]=ev;
     });
@@ -370,7 +383,9 @@ function dur(ms){
   return Math.floor(m/60)+' h '+(m%60?(m%60)+' min':'');
 }
 function slotMin(slot){var o=st.over[slot.id];return o!=null?o:slot.min;}
-function evMin(ev){return slotMin(ev.slot)+(st.evd[ev.id]||0);}
+function evBase(ev){return slotMin(ev.slot)+(ev.off||0);}
+function evMin(ev){return evBase(ev)+(st.evd[ev.id]||0);}
+function active(ev){return !ev.relayMode||ev.relayMode===st.relay;}
 function dayMs(day,min){var d=day.date;return Date.UTC(d[0],d[1]-1,d[2],0,min,0,0)-TZ*60000;}
 function startMs(ev){return dayMs(ev.slot.day,evMin(ev));}
 function dueMs(ev,k){return startMs(ev)-st.th[k-1]*60000;}
@@ -439,6 +454,7 @@ var lastLv={};
 function checkBeeps(t){
   var top=0;
   for(var id in BYID){
+    if(!active(BYID[id]))continue;
     var lv=evaluate(BYID[id],t).level;
     if(primed&&lv>(lastLv[id]||0)&&lv>top)top=lv;
     lastLv[id]=lv;
@@ -452,10 +468,12 @@ var listEl=$('list');
 var rows={};
 var slotEls=[];
 var dayIdx=0;
+var builtRelay=null;
 
 function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
 
 function buildList(){
+  builtRelay=st.relay;
   listEl.innerHTML='';rows={};slotEls=[];
   var day=DAYS[dayIdx];
   day.slots.forEach(function(slot){
@@ -470,15 +488,23 @@ function buildList(){
       info.delay=el('span','delay');info.delay.hidden=true;h.appendChild(info.delay);
       info.meta=el('span','slot-meta');h.appendChild(info.meta);
       var chg=el('button','chg','Change time');chg.type='button';chg.setAttribute('data-slot',slot.id);h.appendChild(chg);
-      var names=[];slot.items.forEach(function(ev){if(ev.sum&&names.indexOf(ev.sum)<0)names.push(ev.sum);});
+      var names=[];slot.items.filter(active).forEach(function(ev){if(ev.sum&&names.indexOf(ev.sum)<0)names.push(ev.sum);});
       if(names.length)h.appendChild(el('div','slot-sum',names.join(' · ')));
+      if(slot.items.some(function(ev){return ev.relayMode;})){
+        var md=el('div','mode');md.appendChild(el('span',null,'Inter-class relay calls:'));
+        var sg=el('span','seg');sg.setAttribute('role','group');sg.setAttribute('aria-label','Inter-class relay calls');
+        [['all','All grades at once'],['each','Grade by grade']].forEach(function(o){
+          var bt=el('button',null,o[1]);bt.type='button';bt.setAttribute('data-relay',o[0]);bt.setAttribute('aria-pressed',st.relay===o[0]?'true':'false');sg.appendChild(bt);
+        });
+        md.appendChild(sg);h.appendChild(md);
+      }
     }
     sec.appendChild(h);
     if(slot.items){
       var ul=el('ul','evs');
-      slot.items.forEach(function(ev){
+      slot.items.filter(active).forEach(function(ev){
         var li=el('li','ev');
-        var no=el('div','no');no.appendChild(el('b',null,ev.n!=null?'#'+ev.n:'·'));no.appendChild(el('span',null,KIND[ev.kind]));
+        var no=el('div','no');no.appendChild(el('b',null,ev.n!=null?'#'+ev.n:'·'));no.appendChild(el('span',null,ev.tag||KIND[ev.kind]));
         var what=el('div','what');what.appendChild(el('div','zh',ev.zhTitle));what.appendChild(el('div','en',ev.enTitle));what.appendChild(el('div','meta',ev.meta));
         var state=el('div','state');
         var pips=el('span','pips');for(var k=1;k<=3;k++)pips.appendChild(el('i',null,''+k));
@@ -516,10 +542,12 @@ function renderConn(){
 }
 
 function update(){
+  if(st.relay!==builtRelay){buildList();return;}
   var t=now();
   $('clock').textContent=hhmmss(t);
   $('rehearsal').hidden=Math.abs(st.offset||0)<1000;
   renderConn();
+  Array.prototype.forEach.call(document.querySelectorAll('[data-relay]'),function(b){b.setAttribute('aria-pressed',b.getAttribute('data-relay')===st.relay?'true':'false');});
   for(var q=1;q<=3;q++){var ti=$('th'+q);if(document.activeElement!==ti)ti.value=st.th[q-1];}
   var overdue=0,maxLevel=0,nextDue=null,nextEv=null,nextK=0,pending_=0;
   slotEls.forEach(function(info){
@@ -566,8 +594,9 @@ function update(){
       }
       r.undo.hidden=e.n===0;
       var dm=st.evd[ev.id]||0;
-      r.tb.hidden=!dm;
-      if(dm)r.tb.textContent=mmToStr(evMin(ev))+' ('+(dm>0?'+':'−')+Math.abs(dm)+')';
+      r.tb.hidden=!dm&&ev.off==null;
+      r.tb.className=dm?'delay':'tm';
+      if(dm||ev.off!=null)r.tb.textContent=mmToStr(evMin(ev))+(dm?' ('+(dm>0?'+':'−')+Math.abs(dm)+')':'');
     });
     if(info.meta){
       info.meta.textContent=left?evCount+' events · '+left+' calls left':'All called';
@@ -610,6 +639,7 @@ listEl.addEventListener('click',function(e){
   else if(b.hasAttribute('data-undo'))undoCall(b.getAttribute('data-undo'));
   else if(b.hasAttribute('data-slot'))openAdjust(b.getAttribute('data-slot'));
   else if(b.hasAttribute('data-evdelay'))openAdjustEv(b.getAttribute('data-evdelay'));
+  else if(b.hasAttribute('data-relay'))send({t:'relay',v:b.getAttribute('data-relay')});
 });
 
 function setDay(i){
@@ -640,10 +670,10 @@ function openAdjustEv(id){
   var ev=BYID[id];if(!ev)return;
   adjEv=ev;adjSlot=null;
   $('adj-title').textContent='Delay one event';
-  $('adj-sub').textContent=(ev.n!=null?'#'+ev.n+' ':'')+ev.enTitle+' · slot time '+mmToStr(slotMin(ev.slot))+' · now '+mmToStr(evMin(ev));
+  $('adj-sub').textContent=(ev.n!=null?'#'+ev.n+' ':'')+ev.enTitle+' · scheduled '+mmToStr(evBase(ev))+' · now '+mmToStr(evMin(ev));
   $('adj-time').value=mmToStr(evMin(ev));
   $('adj-later-row').hidden=true;
-  $('adj-printed').textContent='Slot time';
+  $('adj-printed').textContent='Scheduled time';
   openSheet('adj-scrim');
 }
 function openAdjust(slotId){
@@ -661,7 +691,7 @@ function openAdjust(slotId){
 }
 $('adj-quick').addEventListener('click',function(e){
   var b=e.target.closest('button');if(!b||(!adjSlot&&!adjEv))return;
-  if(b.id==='adj-printed'){$('adj-time').value=mmToStr(adjEv?slotMin(adjEv.slot):adjSlot.min);return;}
+  if(b.id==='adj-printed'){$('adj-time').value=mmToStr(adjEv?evBase(adjEv):adjSlot.min);return;}
   var d=+b.getAttribute('data-d');
   var cur=strToMm($('adj-time').value);if(isNaN(cur))cur=adjEv?evMin(adjEv):slotMin(adjSlot);
   $('adj-time').value=mmToStr(clampMin(cur+d));
@@ -671,7 +701,7 @@ $('adj-apply').addEventListener('click',function(){
   var nv=strToMm($('adj-time').value);
   if(isNaN(nv))return;
   if(adjEv){
-    var one={},dd=nv-slotMin(adjEv.slot);
+    var one={},dd=nv-evBase(adjEv);
     one[adjEv.id]=dd===0?null:dd;
     send({t:'evd',set:one});
     closeSheet('adj-scrim');return;
