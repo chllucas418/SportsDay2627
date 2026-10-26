@@ -10,7 +10,7 @@ Announcer call sheet for the 30th Athletics Meet (27–28 Oct 2026). Several peo
 | `public/app.html` | The call sheet. Only served to signed-in users. |
 | `public/login.html` | Sign-in page. Shown to everyone who is not signed in. |
 | `public/shared.js` | The rules for changing the shared state. Used by the Worker (authoritative) and by the browser (instant on-screen update). |
-| `wrangler.jsonc` | Cloudflare config. |
+| `wrangler.jsonc` | Cloudflare config, including the sign-in password. |
 
 ## Deploy
 
@@ -21,13 +21,7 @@ Announcer call sheet for the 30th Athletics Meet (27–28 Oct 2026). Several peo
    npx wrangler login
    ```
 
-2. Set the password (it is a Worker secret, never stored in the repository):
-
-   ```sh
-   npx wrangler secret put APP_PASSWORD
-   ```
-
-   Enter the password when asked.
+2. The password is the `APP_PASSWORD` variable in `wrangler.jsonc`. Change it there before deploying if you want a different one. It is stored as a plain variable, so anyone who can read the repository can read it. If the repository is public, use a secret instead: delete the `vars` block and run `npx wrangler secret put APP_PASSWORD`.
 
 3. Deploy:
 
@@ -40,8 +34,6 @@ Announcer call sheet for the 30th Athletics Meet (27–28 Oct 2026). Several peo
    ```jsonc
    "routes": [{ "pattern": "sportsday.example.com", "custom_domain": true }]
    ```
-
-If you deploy from GitHub with Workers Builds, add `APP_PASSWORD` under the Worker's Settings, then Variables and Secrets, as a **Secret**.
 
 Durable Objects with SQLite storage work on the free plan.
 

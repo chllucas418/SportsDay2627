@@ -3,7 +3,11 @@
   "main": "src/worker.js",
   "compatibility_date": "2025-01-01",
 
-  // The password is NOT stored here. Set it once with:  npx wrangler secret put APP_PASSWORD
+  // Sign-in password, stored as a plain variable (visible in this file and in the Cloudflare dashboard).
+  "vars": {
+    "APP_PASSWORD": "SportsDayLucas"
+  },
+
   // To serve it on your own domain, add (replace with your hostname):
   // "routes": [{ "pattern": "sportsday.example.com", "custom_domain": true }],
 
