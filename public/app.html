@@ -52,17 +52,17 @@ button{cursor:pointer;touch-action:manipulation}
 .row1{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .tabs{display:flex;gap:4px}
 .tab{background:transparent;border:1px solid var(--rule);border-radius:2px;padding:6px 12px;text-align:left;line-height:1.2;font-weight:600}
-.tab small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+.tab small{white-space:nowrap;display:block;font-weight:400;font-size:11px;color:var(--muted)}
 .tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .tab[aria-selected="true"] small{color:inherit;opacity:.8}
 .clockbox{text-align:right;line-height:1.1}
-.clock{font:600 24px var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.clock{font:600 28px var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .clock small{font:500 10px var(--mono);color:var(--muted);letter-spacing:.04em;margin-left:4px}
 .conn{margin-top:3px;font-size:11px;font-weight:600;color:var(--muted)}
 .conn::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;margin-right:5px}
 .conn.ok{color:var(--ok)}
 .conn.bad{color:var(--l3)}
-.rehearsal{display:inline-block;margin-top:3px;font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;background:var(--l2);color:var(--l2-ink);padding:1px 5px}
+.rehearsal{white-space:nowrap;display:inline-block;margin-top:3px;font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;background:var(--l2);color:var(--l2-ink);padding:1px 5px}
 .strip{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 14px;font-size:13px}
 .strip .nx{min-width:0;flex:1 1 240px;min-height:2.8em}
 .strip .nx b{font-weight:600}
@@ -147,7 +147,7 @@ ul.evs{list-style:none;margin:0;padding:0;background:var(--surface);border-botto
 .timeinput{font:600 28px var(--mono);padding:6px 8px;border:1px solid var(--muted);background:var(--bg);border-radius:2px}
 .tick{width:22px;height:22px;accent-color:var(--accent)}
 @media (prefers-reduced-motion:no-preference){.call{transition:transform .08s}}
-@media (max-width:420px){.tab{padding:6px 9px}.clock{font-size:20px}.zh{font-size:16px}}
+@media (max-width:420px){.tab{padding:6px 9px}.clock{font-size:24px}.zh{font-size:16px}}
 </style>
 </head>
 <body>
@@ -548,7 +548,9 @@ function update(){
   if(st.relay!==builtRelay){buildList();return;}
   var t=now();
   $('clock').textContent=hhmmss(t);
-  $('rehearsal').hidden=Math.abs(st.offset||0)<1000;
+  var rehearsing=Math.abs(st.offset||0)>=1000;
+  $('rehearsal').hidden=!rehearsing;
+  if(rehearsing)$('rehearsal').textContent='Rehearsal · real '+hhmmss(Date.now()+skew);
   renderConn();
   Array.prototype.forEach.call(document.querySelectorAll('[data-relay]'),function(b){b.setAttribute('aria-pressed',b.getAttribute('data-relay')===st.relay?'true':'false');});
   for(var q=1;q<=3;q++){var ti=$('th'+q);if(document.activeElement!==ti)ti.value=st.th[q-1];}
