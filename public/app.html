@@ -17,6 +17,7 @@
   --l2-bg:#faeca0; --l2:#e8b800; --l2-ink:#241d00;
   --l3-bg:#f7d0cb; --l3:#c42b1f; --l3-ink:#ffffff;
   --scrim:rgba(20,24,26,.45);
+  --shine:rgba(255,255,255,.5); --glowc:rgba(255,190,0,.65);
   --sans:"IBM Plex Sans","Noto Sans TC","PingFang HK","PingFang TC","Microsoft JhengHei","Noto Sans CJK TC",system-ui,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
   color-scheme:light;
@@ -29,6 +30,7 @@
     --l2-bg:#473b08; --l2:#f0c73a; --l2-ink:#1d1700;
     --l3-bg:#561d19; --l3:#ff6a5c; --l3-ink:#210504;
     --scrim:rgba(0,0,0,.6);
+    --shine:rgba(255,255,255,.3); --glowc:rgba(255,200,40,.6);
     color-scheme:dark;
   }
 }
@@ -55,7 +57,7 @@ button{cursor:pointer;touch-action:manipulation}
 .tab small{white-space:nowrap;display:block;font-weight:400;font-size:11px;color:var(--muted)}
 .tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .tab[aria-selected="true"] small{color:inherit;opacity:.8}
-.clockbox{text-align:right;line-height:1.1}
+.clockbox{text-align:left;line-height:1.1}
 .clock{font:600 28px var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .clock small{font:500 10px var(--mono);color:var(--muted);letter-spacing:.04em;margin-left:4px}
 .conn{margin-top:3px;font-size:11px;font-weight:600;color:var(--muted)}
@@ -63,6 +65,10 @@ button{cursor:pointer;touch-action:manipulation}
 .conn.ok{color:var(--ok)}
 .conn.bad{color:var(--l3)}
 .rehearsal{white-space:nowrap;display:inline-block;margin-top:3px;font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;background:var(--l2);color:var(--l2-ink);padding:1px 5px}
+.slotbar{display:flex;align-items:baseline;gap:6px 10px;min-width:0;border-top:1px solid var(--rule);padding-top:6px}
+.slotbar .cap{font:600 10px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.sb-time{font:600 24px var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.sb-what{flex:1;min-width:0;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .strip{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 14px;font-size:13px}
 .strip .nx{min-width:0;flex:1 1 240px;min-height:2.8em}
 .strip .nx b{font-weight:600}
@@ -93,7 +99,7 @@ main{padding-top:6px}
 .slot.marker .slot-time,.slot.marker .mk{color:var(--muted)}
 .mk{font-size:14px}
 ul.evs{list-style:none;margin:0;padding:0;background:var(--surface);border-bottom:1px solid var(--rule)}
-.ev{display:grid;grid-template-columns:46px minmax(0,1fr) 92px;grid-template-rows:auto auto;gap:3px 12px;padding:10px 10px 10px 8px;border-top:1px solid var(--rule)}
+.ev{position:relative;overflow:hidden;display:grid;grid-template-columns:46px minmax(0,1fr) 92px;grid-template-rows:auto auto;gap:3px 12px;padding:10px 10px 10px 8px;border-top:1px solid var(--rule)}
 .no{grid-row:1 / span 2;font-family:var(--mono);line-height:1.2}
 .no b{display:block;font-size:17px;font-weight:600}
 .no span{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-family:var(--sans)}
@@ -116,7 +122,26 @@ ul.evs{list-style:none;margin:0;padding:0;background:var(--surface);border-botto
 .times span{white-space:nowrap;margin-right:12px}
 .undo{background:transparent;border:0;padding:4px 2px;font-size:12px;color:var(--muted);text-decoration:underline;text-underline-offset:2px}
 .act{grid-column:3;grid-row:1 / span 2;display:flex}
-.call{flex:1;min-height:56px;border:0;border-radius:3px;background:var(--accent);color:var(--on-accent);font-weight:600;font-size:15px}
+.call{flex:1;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:0;border-radius:3px;background:var(--accent);color:var(--on-accent);font-weight:600;font-size:15px;line-height:1.15}
+.call small{display:block;margin-top:3px;font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+.call small:empty{display:none}
+.call.now:disabled{background:var(--accent);color:var(--on-accent);border:0}
+.msg.strong{font-weight:700}
+.res{grid-column:2 / -1;display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin-top:6px}
+.resbtn{min-height:44px;padding:6px 12px;border:1.5px solid var(--ink);border-radius:3px;background:transparent;font-weight:600;text-align:left;line-height:1.2}
+.resbtn small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
+.resbtn.ready{background:var(--ink);color:var(--surface)}
+.resbtn.ready small{color:inherit;opacity:.8}
+.resbtn:disabled{cursor:default}
+.resbtn.rdone{border-color:var(--ok);color:var(--ok)}
+.resbtn.rdone small{color:var(--ok)}
+.rtime{font:500 12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.rtime:empty{display:none}
+.ev.shining{outline:3px solid var(--ink);outline-offset:-3px;animation:glow .9s ease-in-out infinite alternate}
+.ev.shining::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(100deg,transparent 30%,var(--shine) 50%,transparent 70%);transform:translateX(-100%);animation:sweep 1.3s linear infinite}
+@keyframes sweep{to{transform:translateX(100%)}}
+@keyframes glow{from{box-shadow:inset 0 0 0 0 var(--glowc)}to{box-shadow:inset 0 0 34px 8px var(--glowc)}}
+@media (prefers-reduced-motion:reduce){.ev.shining{animation:none;box-shadow:inset 0 0 0 6px var(--glowc)}.ev.shining::after{display:none}}
 .call:active{transform:scale(.97)}
 .call:disabled{background:transparent;color:var(--ok);border:1.5px solid var(--ok);cursor:default;transform:none}
 .ev.st1{background:var(--l1-bg)} .ev.st1 .call{background:var(--l1);color:var(--l1-ink)}
@@ -165,15 +190,20 @@ ul.evs{list-style:none;margin:0;padding:0;background:var(--surface);border-botto
 <div class="bar" id="bar">
   <div class="in">
     <div class="row1">
-      <div class="tabs" role="tablist" aria-label="Day">
-        <button class="tab" role="tab" id="tab-0" data-day="0" type="button">Day 1<small>Tue 27 Oct</small></button>
-        <button class="tab" role="tab" id="tab-1" data-day="1" type="button">Day 2<small>Wed 28 Oct</small></button>
-      </div>
       <div class="clockbox">
         <div class="clock"><span id="clock">--:--:--</span><small>UTC+8</small></div>
         <div class="conn" id="conn">Connecting…</div>
         <span class="rehearsal" id="rehearsal" hidden>Rehearsal clock</span>
       </div>
+      <div class="tabs" role="tablist" aria-label="Day">
+        <button class="tab" role="tab" id="tab-0" data-day="0" type="button">Day 1<small>Tue 27 Oct</small></button>
+        <button class="tab" role="tab" id="tab-1" data-day="1" type="button">Day 2<small>Wed 28 Oct</small></button>
+      </div>
+    </div>
+    <div class="slotbar" id="slotbar" aria-live="off">
+      <span class="cap">List at</span><span class="sb-time" id="sb-time">--:--</span>
+      <span class="delay" id="sb-delay" hidden></span>
+      <span class="sb-what" id="sb-what"></span>
     </div>
     <div class="strip">
       <div class="nx" id="strip-next"></div>
@@ -322,6 +352,7 @@ var DAYS=[
  ]}
 ];
 var KIND={track:'Track',field:'Field',relay:'Relay',show:'Show'};
+var SHINE_MS=15000; // how long a row shines after a call or an announcement is recorded
 var BYID={};
 DAYS.forEach(function(day){
   day.slots.forEach(function(slot){
@@ -339,6 +370,12 @@ DAYS.forEach(function(day){
         ev.sum=EVN[ev.ev]+(ev.kind==='track'?' '+RD[ev.rd]:'');
       }else{
         ev.zhTitle=ev.zh; ev.enTitle=ev.en; ev.meta=ev.meta||'';
+      }
+      if(ev.kind!=='show'){
+        var heats=ev.rd==='初賽';
+        ev.resKind=heats?'shortlist':'winners';
+        ev.resEn=heats?'Announce shortlist':'Announce winners';
+        ev.resZh=heats?'公布晉級名單':'公布得獎名單';
       }
       BYID[ev.id]=ev;
     });
@@ -483,7 +520,7 @@ function buildList(){
     var h=el('div','slot-h');
     var time=el('span','slot-time',mmToStr(slot.min));
     h.appendChild(time);
-    var info={slot:slot,time:time,rows:[]};
+    var info={slot:slot,time:time,rows:[],sec:sec,sum:''};
     if(slot.marker){
       h.appendChild(el('span','mk',slot.marker.zh+' · '+slot.marker.en));
     }else{
@@ -491,6 +528,7 @@ function buildList(){
       info.meta=el('span','slot-meta');h.appendChild(info.meta);
       var chg=el('button','chg','Change time');chg.type='button';chg.setAttribute('data-slot',slot.id);h.appendChild(chg);
       var names=[];slot.items.filter(active).forEach(function(ev){if(ev.sum&&names.indexOf(ev.sum)<0)names.push(ev.sum);});
+      info.sum=names.join(' · ');
       if(names.length)h.appendChild(el('div','slot-sum',names.join(' · ')));
       if(slot.items.some(function(ev){return ev.relayMode;})){
         var md=el('div','mode');md.appendChild(el('span',null,'Inter-class relay calls:'));
@@ -518,10 +556,20 @@ function buildList(){
         state.appendChild(pips);state.appendChild(tb);state.appendChild(msg);state.appendChild(undo);state.appendChild(dly);state.appendChild(times);
         var act=el('div','act');
         var call=el('button','call');call.type='button';call.setAttribute('data-call',ev.id);
+        var cl=el('span'),cs=el('small');call.appendChild(cl);call.appendChild(cs);
         act.appendChild(call);
         li.appendChild(no);li.appendChild(what);li.appendChild(state);li.appendChild(act);
+        var r={el:li,ev:ev,pips:pips.children,msg:msg,undo:undo,call:call,cl:cl,cs:cs,tb:tb,times:times,res:null};
+        if(ev.resKind){
+          var rw=el('div','res');
+          var rb=el('button','resbtn');rb.type='button';rb.setAttribute('data-res',ev.id);
+          var rl=el('span'),rs=el('small');rb.appendChild(rl);rb.appendChild(rs);
+          var rt=el('span','rtime');
+          var ru=el('button','undo','Undo');ru.type='button';ru.setAttribute('data-unres',ev.id);
+          rw.appendChild(rb);rw.appendChild(rt);rw.appendChild(ru);li.appendChild(rw);
+          r.res={btn:rb,lab:rl,sub:rs,time:rt,undo:ru};
+        }
         ul.appendChild(li);
-        var r={el:li,ev:ev,pips:pips.children,msg:msg,undo:undo,call:call,tb:tb,times:times};
         rows[ev.id]=r;info.rows.push(r);
       });
       sec.appendChild(ul);
@@ -531,6 +579,28 @@ function buildList(){
   });
   update();
 }
+
+function setCall(r,main,sub){r.cl.textContent=main;r.cs.textContent=sub;}
+
+// The bar shows the time of the list of items currently under it.
+function updateSlotBar(){
+  if(!slotEls.length)return;
+  var y=$('bar').offsetHeight+6,cur=slotEls[0];
+  for(var i=0;i<slotEls.length;i++){
+    if(slotEls[i].sec.getBoundingClientRect().top<=y)cur=slotEls[i];else break;
+  }
+  var slot=cur.slot,dl=slot.marker?0:slotMin(slot)-slot.min;
+  $('sb-time').textContent=mmToStr(slot.marker?slot.min:slotMin(slot));
+  $('sb-delay').hidden=!dl;
+  if(dl)$('sb-delay').textContent=(dl>0?'+':'−')+Math.abs(dl)+' min';
+  $('sb-what').textContent=slot.marker?slot.marker.zh+' · '+slot.marker.en:(cur.sum+(cur.meta?' · '+cur.meta.textContent:''));
+}
+var scrollTick=false;
+window.addEventListener('scroll',function(){
+  if(scrollTick)return;
+  scrollTick=true;
+  requestAnimationFrame(function(){scrollTick=false;updateSlotBar();});
+},{passive:true});
 
 function renderConn(){
   var c=$('conn'),n=pending.length;
@@ -569,20 +639,25 @@ function update(){
       var done=e.n>=3;
       left+=3-e.n;
       var k=e.n+1;
-      r.el.hidden=lc.hide&&done;
-      r.el.className='ev'+(done?' done':'')+(e.level?' st'+e.level:'');
+      var lastCall=e.n?e.calls[e.n-1]:0,rts=st.res[ev.id]||0,latest=Math.max(lastCall,rts),since=t-latest;
+      var shining=latest>0&&since<SHINE_MS&&since>-5000;
+      var byRes=shining&&rts>=lastCall;
+      var secs=Math.max(0,Math.ceil((SHINE_MS-since)/1000));
+      var finished=done&&(!ev.resKind||rts>0);
+      r.el.hidden=lc.hide&&finished&&!shining;
+      r.el.className='ev'+(done?' done':'')+(e.level?' st'+e.level:'')+(shining?' shining':'');
       for(var i=0;i<3;i++){
         var p=e.pips[i],pe=r.pips[i];
         pe.className=p.s==='made'?('made'+(p.late?' late':'')):(p.s==='due'?('due l'+p.k):'');
       }
       if(done){
-        r.call.textContent='Done';r.call.disabled=true;
+        setCall(r,'Done','');r.call.disabled=true;
         r.msg.textContent='All 3 calls made'+(e.late?' · '+e.late+' late':'');
         r.call.setAttribute('aria-label','All calls made for '+ev.zhTitle);
       }else{
         pending_++;
         r.call.disabled=false;
-        r.call.textContent=k===3?'Final call':'Call '+k;
+        setCall(r,k===3?'Final call':'Call '+k,'');
         r.call.setAttribute('aria-label','Record call '+k+' for '+ev.enTitle);
         var due=dueMs(ev,k),diff=due-t;
         if(t>=e.start){
@@ -596,6 +671,29 @@ function update(){
           if(nextDue==null||due<nextDue){nextDue=due;nextEv=ev;nextK=k;}
         }
         if(e.level){overdue++;if(e.level>maxLevel)maxLevel=e.level;}
+      }
+      // For 15 seconds after a call is recorded the row shines and keeps showing that call, so it gets announced before the next one appears.
+      r.call.classList.toggle('now',shining&&!byRes);
+      r.msg.className='msg'+(shining?' strong':'');
+      if(shining&&!byRes){
+        setCall(r,e.n===3?'Final call':'Call '+e.n,'Announce now · '+secs+'s');
+        r.call.disabled=true;
+        r.msg.textContent='Announce call '+e.n+' now · '+secs+'s';
+      }
+      if(r.res){
+        var rdone=rts>0,word=ev.resKind==='shortlist'?'shortlist':'winners';
+        if(byRes){
+          r.res.lab.textContent='Announce the '+word+' now';r.res.sub.textContent=secs+'s';
+          r.msg.textContent='Announce the '+word+' now · '+secs+'s';
+        }else if(rdone){
+          r.res.lab.textContent=(word==='shortlist'?'Shortlist':'Winners')+' announced';r.res.sub.textContent=ev.resZh;
+        }else{
+          r.res.lab.textContent=ev.resEn;r.res.sub.textContent=ev.resZh;
+        }
+        r.res.btn.disabled=rdone;
+        r.res.btn.className='resbtn'+(rdone&&!byRes?' rdone':'')+(!rdone&&t>=e.start?' ready':'');
+        r.res.undo.hidden=!rdone;
+        r.res.time.textContent=rdone?'at '+hhmmss(rts):'';
       }
       r.undo.hidden=e.n===0;
       r.times.textContent='';
@@ -625,6 +723,7 @@ function update(){
     s.appendChild(document.createTextNode(' '+nextEv.zhTitle+' at '+hhmm(nextDue)+' (in '+dur(nextDue-t)+')'));
     strip.appendChild(s);
   }
+  updateSlotBar();
   checkBeeps(t);
 }
 
@@ -647,6 +746,8 @@ listEl.addEventListener('click',function(e){
   else if(b.hasAttribute('data-slot'))openAdjust(b.getAttribute('data-slot'));
   else if(b.hasAttribute('data-evdelay'))openAdjustEv(b.getAttribute('data-evdelay'));
   else if(b.hasAttribute('data-relay'))send({t:'relay',v:b.getAttribute('data-relay')});
+  else if(b.hasAttribute('data-res')){send({t:'res',id:b.getAttribute('data-res'),ts:now()});if(navigator.vibrate){try{navigator.vibrate(14);}catch(e){}}}
+  else if(b.hasAttribute('data-unres'))send({t:'unres',id:b.getAttribute('data-unres')});
 });
 
 function setDay(i){
