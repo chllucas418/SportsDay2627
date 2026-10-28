@@ -3,7 +3,7 @@
 // Every operation is idempotent: re-sending one after a dropped connection is harmless.
 
 export function emptyState() {
-  return { calls: {}, over: {}, evd: {}, th: [20, 10, 5], offset: 0, relay: 'all', res: {} };
+  return { calls: {}, over: {}, evd: {}, th: [20, 10, 5], offset: 0, relay: 'all', res: {}, skip: {} };
 }
 
 const ID = /^d[12]-[A-Za-z0-9:]{1,12}$/;
@@ -68,10 +68,16 @@ export function applyOp(s, op) {
       delete res[op.id];
       return Object.assign({}, s, { res });
     }
+    case 'skip': { // the announcer double-tapped to end the shine early; remembers which call or announcement was acknowledged
+      if (typeof op.id !== 'string' || !ID.test(op.id) || !isNum(op.ts, 0, 8.64e15)) return s;
+      const skip = s.skip || {};
+      if ((skip[op.id] || 0) >= op.ts) return s;
+      return Object.assign({}, s, { skip: Object.assign({}, skip, { [op.id]: Math.round(op.ts) }) });
+    }
     case 'relay':
       return op.v === 'all' || op.v === 'each' ? Object.assign({}, s, { relay: op.v }) : s;
     case 'resetCalls':
-      return Object.assign({}, s, { calls: {}, res: {} });
+      return Object.assign({}, s, { calls: {}, res: {}, skip: {} });
     case 'resetTimes':
       return Object.assign({}, s, { over: {}, evd: {} });
     default:

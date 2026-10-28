@@ -641,7 +641,7 @@ function update(){
       left+=Math.max(0,3-e.n);
       var k=e.n+1;
       var lastCall=e.n?e.calls[e.n-1]:0,rts=st.res[ev.id]||0,latest=Math.max(lastCall,rts),since=t-latest;
-      var shining=latest>0&&since<SHINE_MS&&since>-5000;
+      var shining=latest>0&&since<SHINE_MS&&since>-5000&&(st.skip[ev.id]||0)<latest;
       var byRes=shining&&rts>=lastCall;
       var secs=Math.max(0,Math.ceil((SHINE_MS-since)/1000));
       var finished=done&&(!ev.resKind||rts>0);
@@ -674,24 +674,24 @@ function update(){
         if(e.level){overdue++;if(e.level>maxLevel)maxLevel=e.level;}
       }
       // For 15 seconds after a call is recorded the row shines and keeps showing that call, so it gets announced before the next one appears.
+      r.latest=latest;r.lockCall=shining&&!byRes;r.lockRes=byRes;
       r.call.classList.toggle('now',shining&&!byRes);
       r.msg.className='msg'+(shining?' strong':'');
       if(shining&&!byRes){
         setCall(r,e.n>=3?'Final call':'Call '+e.n,'Announce now · '+secs+'s');
-        r.call.disabled=true;
-        r.msg.textContent=(e.n>3?'Announce the final call again now':'Announce call '+e.n+' now')+' · '+secs+'s';
+        r.msg.textContent=(e.n>3?'Announce the final call again now':'Announce call '+e.n+' now')+' · '+secs+'s · double-tap the button to skip';
       }
       if(r.res){
         var rdone=rts>0,word=ev.resKind==='shortlist'?'shortlist':'winners';
         if(byRes){
           r.res.lab.textContent='Announce the '+word+' now';r.res.sub.textContent=secs+'s';
-          r.msg.textContent='Announce the '+word+' now · '+secs+'s';
+          r.msg.textContent='Announce the '+word+' now · '+secs+'s · double-tap the button to skip';
         }else if(rdone){
           r.res.lab.textContent=(word==='shortlist'?'Shortlist':'Winners')+' announced';r.res.sub.textContent=ev.resZh;
         }else{
           r.res.lab.textContent=ev.resEn;r.res.sub.textContent=ev.resZh;
         }
-        r.res.btn.disabled=rdone;
+        r.res.btn.disabled=rdone&&!byRes;
         r.res.btn.className='resbtn'+(rdone&&!byRes?' rdone':'')+(!rdone&&t>=e.start?' ready':'');
         r.res.undo.hidden=!rdone;
         r.res.time.textContent=rdone?'at '+hhmmss(rts):'';
@@ -729,6 +729,15 @@ function update(){
 }
 
 /* ---------- Interactions ---------- */
+// A button that is waiting out its shine ignores a single tap. Two quick taps skip the wait on every device.
+function lockTap(r){
+  var t0=Date.now();
+  if(r.lastTap&&t0-r.lastTap<700){
+    r.lastTap=0;
+    send({t:'skip',id:r.ev.id,ts:r.latest});
+    if(navigator.vibrate){try{navigator.vibrate(14);}catch(e){}}
+  }else r.lastTap=t0;
+}
 function recordCall(id){
   var c=st.calls[id]||[];
   if(c.length>=50)return; // after the third call a tap is a repeated final call
@@ -742,12 +751,12 @@ function undoCall(id){
 }
 listEl.addEventListener('click',function(e){
   var b=e.target.closest('button');if(!b)return;
-  if(b.hasAttribute('data-call'))recordCall(b.getAttribute('data-call'));
+  if(b.hasAttribute('data-call')){var rc=rows[b.getAttribute('data-call')];if(rc&&rc.lockCall)lockTap(rc);else recordCall(b.getAttribute('data-call'));}
   else if(b.hasAttribute('data-undo'))undoCall(b.getAttribute('data-undo'));
   else if(b.hasAttribute('data-slot'))openAdjust(b.getAttribute('data-slot'));
   else if(b.hasAttribute('data-evdelay'))openAdjustEv(b.getAttribute('data-evdelay'));
   else if(b.hasAttribute('data-relay'))send({t:'relay',v:b.getAttribute('data-relay')});
-  else if(b.hasAttribute('data-res')){send({t:'res',id:b.getAttribute('data-res'),ts:now()});if(navigator.vibrate){try{navigator.vibrate(14);}catch(e){}}}
+  else if(b.hasAttribute('data-res')){var rr=rows[b.getAttribute('data-res')];if(rr&&rr.lockRes)lockTap(rr);else{send({t:'res',id:b.getAttribute('data-res'),ts:now()});if(navigator.vibrate){try{navigator.vibrate(14);}catch(e){}}}}
   else if(b.hasAttribute('data-unres'))send({t:'unres',id:b.getAttribute('data-unres')});
 });
 
