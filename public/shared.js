@@ -7,6 +7,7 @@ export function emptyState() {
 }
 
 const ID = /^d[12]-[A-Za-z0-9:]{1,12}$/;
+const MAX_CALLS = 50;
 
 function isNum(v, lo, hi) {
   return typeof v === 'number' && isFinite(v) && v >= lo && v <= hi;
@@ -31,7 +32,7 @@ export function applyOp(s, op) {
     case 'call': {
       if (typeof op.id !== 'string' || !ID.test(op.id) || !isNum(op.ts, 0, 8.64e15)) return s;
       const c = s.calls[op.id] || [];
-      if (c.length !== op.expect || c.length >= 3) return s;
+      if (c.length !== op.expect || c.length >= MAX_CALLS) return s; // after the third call, extra taps are repeated final calls
       return Object.assign({}, s, { calls: Object.assign({}, s.calls, { [op.id]: c.concat([Math.round(op.ts)]) }) });
     }
     case 'undo': {

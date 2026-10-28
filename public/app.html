@@ -149,7 +149,8 @@ ul.evs{list-style:none;margin:0;padding:0;background:var(--surface);border-botto
 .ev.st3{background:var(--l3-bg)} .ev.st3 .call{background:var(--l3);color:var(--l3-ink)}
 .ev.st1 .msg,.ev.st2 .msg,.ev.st3 .msg{font-weight:600}
 .ev.done .what,.ev.done .no{opacity:.55}
-.ev.done .call:disabled{opacity:.8}
+.ev.done .call{background:transparent;color:var(--ok);border:1.5px solid var(--ok)}
+.ev.done .call.now{background:var(--accent);color:var(--on-accent);border:0}
 
 .scrim{position:fixed;inset:var(--bar-h,0px) 0 0 0;background:var(--scrim);z-index:20;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--surface);width:100%;max-width:560px;max-height:90%;overflow:auto;border-top:3px solid var(--ink);padding:16px max(16px,env(safe-area-inset-left,0px)) calc(20px + env(safe-area-inset-bottom,0px))}
@@ -637,7 +638,7 @@ function update(){
       var ev=r.ev,e=evaluate(ev,t);
       evCount++;
       var done=e.n>=3;
-      left+=3-e.n;
+      left+=Math.max(0,3-e.n);
       var k=e.n+1;
       var lastCall=e.n?e.calls[e.n-1]:0,rts=st.res[ev.id]||0,latest=Math.max(lastCall,rts),since=t-latest;
       var shining=latest>0&&since<SHINE_MS&&since>-5000;
@@ -651,9 +652,9 @@ function update(){
         pe.className=p.s==='made'?('made'+(p.late?' late':'')):(p.s==='due'?('due l'+p.k):'');
       }
       if(done){
-        setCall(r,'Done','');r.call.disabled=true;
-        r.msg.textContent='All 3 calls made'+(e.late?' · '+e.late+' late':'');
-        r.call.setAttribute('aria-label','All calls made for '+ev.zhTitle);
+        setCall(r,'Done','Final call again');r.call.disabled=false;
+        r.msg.textContent='All 3 calls made'+(e.late?' · '+e.late+' late':'')+(e.n>3?' · final call repeated '+(e.n-3)+'×':'');
+        r.call.setAttribute('aria-label','All calls made for '+ev.zhTitle+'. Tap to announce the final call again');
       }else{
         pending_++;
         r.call.disabled=false;
@@ -676,9 +677,9 @@ function update(){
       r.call.classList.toggle('now',shining&&!byRes);
       r.msg.className='msg'+(shining?' strong':'');
       if(shining&&!byRes){
-        setCall(r,e.n===3?'Final call':'Call '+e.n,'Announce now · '+secs+'s');
+        setCall(r,e.n>=3?'Final call':'Call '+e.n,'Announce now · '+secs+'s');
         r.call.disabled=true;
-        r.msg.textContent='Announce call '+e.n+' now · '+secs+'s';
+        r.msg.textContent=(e.n>3?'Announce the final call again now':'Announce call '+e.n+' now')+' · '+secs+'s';
       }
       if(r.res){
         var rdone=rts>0,word=ev.resKind==='shortlist'?'shortlist':'winners';
@@ -697,7 +698,7 @@ function update(){
       }
       r.undo.hidden=e.n===0;
       r.times.textContent='';
-      for(var ci=0;ci<e.calls.length;ci++)r.times.appendChild(el('span',null,'Call '+(ci+1)+' '+hhmmss(e.calls[ci])+(e.pips[ci].late?' (late)':'')));
+      for(var ci=0;ci<e.calls.length;ci++)r.times.appendChild(el('span',null,(ci<3?'Call '+(ci+1):'Final again')+' '+hhmmss(e.calls[ci])+(e.pips[ci]&&e.pips[ci].late?' (late)':'')));
       var dm=st.evd[ev.id]||0;
       r.tb.hidden=!dm&&ev.off==null;
       r.tb.className=dm?'delay':'tm';
@@ -730,7 +731,7 @@ function update(){
 /* ---------- Interactions ---------- */
 function recordCall(id){
   var c=st.calls[id]||[];
-  if(c.length>=3)return;
+  if(c.length>=50)return; // after the third call a tap is a repeated final call
   send({t:'call',id:id,expect:c.length,ts:now()});
   if(navigator.vibrate){try{navigator.vibrate(14);}catch(e){}}
 }
